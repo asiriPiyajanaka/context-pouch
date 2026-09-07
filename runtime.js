@@ -75,7 +75,23 @@
     render();
     position();
   }
+  let openingAnimation;
+  const connector = document.createElementNS(
+    "http://www.w3.org/2000/svg",
+    "svg",
+  );
+  connector.id = "context-pouch-connector";
+  connector.setAttribute("aria-hidden", "true");
+  connector.innerHTML =
+    '<path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>';
+  connector.style.cssText =
+    "position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:2147483599;color:var(--vscode-focusBorder,#aa94df);display:none;opacity:.65";
+  document.body.appendChild(connector);
+  style.textContent +=
+    '#context-pouch-button[aria-expanded="true"]{border-color:var(--vscode-focusBorder,#aa94df);box-shadow:0 0 0 3px #aa94df20}';
   function dismiss(restoreFocus = false) {
+    openingAnimation?.cancel();
+    connector.style.display = "none";
     panel.classList.remove("open");
     button.setAttribute("aria-expanded", "false");
     if (restoreFocus) button.focus();
@@ -124,7 +140,10 @@
   function position() {
     const ed = findEditor();
     button.style.display = ed ? "flex" : "none";
-    if (!ed) return;
+    if (!ed) {
+      dismiss();
+      return;
+    }
     const r = ed.getBoundingClientRect();
     button.style.left =
       Math.max(8, Math.min(innerWidth - 38, r.right - 31)) + "px";
@@ -141,11 +160,19 @@
       shell && shell.width < innerWidth * 0.95 ? shell.right : r.right + 16;
     const leftRoom = leftEdge - gap - margin;
     const rightRoom = innerWidth - rightEdge - gap - margin;
-    const sideRoom = Math.max(leftRoom, rightRoom);
-    const docked = sideRoom >= 280;
+    const anchor = button.getBoundingClientRect();
+    // A left margin across a wide chat is farther away than an anchored popover.
+    const useRight = rightRoom >= 280;
+    const useLeft =
+      !useRight && leftRoom >= 280 && anchor.left - leftEdge < 180;
+    const docked = useRight || useLeft;
     const panelWidth = Math.min(
       advanced ? 340 : 300,
-      docked ? sideRoom : Math.max(260, innerWidth * 0.42),
+      docked
+        ? useRight
+          ? rightRoom
+          : leftRoom
+        : Math.max(260, innerWidth * 0.42),
       innerWidth - margin * 2,
     );
     panel.style.width = panelWidth + "px";
@@ -154,27 +181,55 @@
         140,
         Math.min(innerHeight - 24, docked ? 560 : innerHeight * 0.48),
       ) + "px";
+    const above = anchor.top - margin - 12;
+    const below = innerHeight - anchor.bottom - margin - 12;
+    const openAbove = above >= below;
+    if (!docked)
+      panel.style.maxHeight =
+        Math.max(100, Math.min(innerHeight * 0.48, openAbove ? above : below)) +
+        "px";
     panel.dataset.placement = docked
-      ? rightRoom >= leftRoom
+      ? useRight
         ? "right"
         : "left"
-      : "edge";
+      : openAbove
+        ? "above"
+        : "below";
     const left = docked
-      ? rightRoom >= leftRoom
+      ? useRight
         ? rightEdge + gap
         : leftEdge - gap - panelWidth
-      : innerWidth - margin - panelWidth;
-    panel.style.left =
-      Math.max(margin, Math.min(innerWidth - panelWidth - margin, left)) + "px";
+      : anchor.right - panelWidth;
+    const x = Math.max(
+      margin,
+      Math.min(innerWidth - panelWidth - margin, left),
+    );
+    const top = docked
+      ? anchor.bottom - panel.offsetHeight
+      : openAbove
+        ? anchor.top - 12 - panel.offsetHeight
+        : anchor.bottom + 12;
+    const y = Math.max(
+      margin,
+      Math.min(innerHeight - panel.offsetHeight - margin, top),
+    );
+    panel.style.left = x + "px";
     panel.style.right = "auto";
-    // Edge fallback stays near the top corner, away from the draft at the bottom.
-    panel.style.top =
-      (docked
-        ? Math.max(
-            margin,
-            Math.min(innerHeight - panel.offsetHeight - margin, r.top),
-          )
-        : margin) + "px";
+    panel.style.top = y + "px";
+    const ax = anchor.left + anchor.width / 2,
+      ay = anchor.top + anchor.height / 2;
+    panel.style.transformOrigin = `${ax - x}px ${ay - y}px`;
+    // Join the nearest panel edge to the button; this never intercepts chat clicks.
+    const px = Math.max(x + 16, Math.min(x + panelWidth - 16, ax));
+    const py = Math.max(y + 16, Math.min(y + panel.offsetHeight - 16, ay));
+    const endX = docked ? (useRight ? x : x + panelWidth) : px;
+    const endY = docked ? py : openAbove ? y + panel.offsetHeight : y;
+    const startX = docked ? (useRight ? anchor.right : anchor.left) : ax;
+    const startY = docked ? ay : openAbove ? anchor.top : anchor.bottom;
+    connector
+      .querySelector("path")
+      .setAttribute("d", `M ${startX} ${startY} L ${endX} ${endY}`);
+    connector.style.display = "block";
   }
 
   function render() {
@@ -493,6 +548,16 @@
       request("state").catch(() => {});
       render();
       position();
+      openingAnimation?.cancel();
+      if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        openingAnimation = panel.animate(
+          [
+            { opacity: 0, transform: "scale(.18)" },
+            { opacity: 1, transform: "scale(1)" },
+          ],
+          { duration: 190, easing: "cubic-bezier(.2,.8,.2,1)" },
+        );
+      }
       (
         panel.querySelector(".cp-dialog.open input, .cp-dialog.open button") ||
         panel.querySelector(".cp-search")

@@ -5,7 +5,7 @@ Reusable constraints beside the Codex composer, with a connected rule graph in a
 ## Use Pouch
 
 - Click the **Pouch** button beside the composer. **Simple** mode shows search, presets, and rule titles; **Advanced** adds filters, details, editing, and reinforcement. Your mode choice is remembered.
-- Pouch opens in a side margin when there is room. In narrow webviews it uses a compact corner panel. Click outside or press Escape to close it; unfinished rule edits remain available when reopened. Like other webview content, the popup cannot extend outside the Codex pane.
+- Pouch opens in a nearby side margin when there is room, or 12px above/below its button in narrow webviews. It expands from the button with a short animation and keeps a subtle connection line visible. Reduced-motion preferences disable the animation. Click outside or press Escape to close it; unfinished rule edits remain available when reopened. Like other webview content, the popup cannot extend outside the Codex pane.
 - Choose **Review selected rules** or **Reinforce selected** to review the exact instructions before inserting them. An existing Pouch block is replaced instead of duplicated. **Remove draft block** removes those marked instructions.
 - Click **Graph ↗**, run **Context Pouch: Open Rule Graph**, or press **Cmd+Alt+P** (Windows/Linux: **Ctrl+Alt+P**) to open the graph in a new tab.
 - In the graph, click a rule to inspect or edit it. Drag nodes, pan the background, scroll to zoom, or use **Fit**. Categories and presets connect their member rules; related-rule links are editable. **Local graph** shows a rule's immediate connections. The sidebar provides keyboard-accessible rule navigation.
@@ -40,7 +40,7 @@ A pack uses this structure (related-rule and preset IDs refer to rules in the sa
 
 ## Install locally
 
-Run `npm run package`, then use VS Code's **Extensions → … → Install from VSIX…** with the generated `dist/context-pouch-codex-0.2.1.vsix`.
+Run `npm run package`, then use VS Code's **Extensions → … → Install from VSIX…** with the generated `dist/context-pouch-codex-0.2.2.vsix`.
 
 Run **Context Pouch: Install / Repair Codex Button**, then reload VS Code. Updating Pouch also requires repairing the patch and reloading; when enabled, automatic repair detects changes in both Pouch and Codex.
 
