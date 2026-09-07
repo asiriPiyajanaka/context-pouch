@@ -21,6 +21,10 @@
     search = "",
     editing = null,
     busy = false;
+  let advanced = false;
+  try {
+    advanced = localStorage.getItem("context-pouch.mode") === "advanced";
+  } catch (_) {}
   const style = document.createElement("style");
   style.textContent = `
     #context-pouch-button{position:fixed;z-index:2147483600;width:30px;height:30px;display:none;align-items:center;justify-content:center;border-radius:9px;border:1px solid #8885;background:var(--vscode-input-background,#282733);color:var(--vscode-foreground,#eee);cursor:pointer;padding:5px}
@@ -28,6 +32,10 @@
     #context-pouch-panel.open{display:flex}#context-pouch-panel *{box-sizing:border-box}#context-pouch-panel button,#context-pouch-panel input,#context-pouch-panel select,#context-pouch-panel textarea{font:inherit;color:inherit}#context-pouch-panel button{cursor:pointer;border:1px solid #8884;border-radius:7px;background:transparent;padding:6px 9px}#context-pouch-panel button:hover{background:#8882}#context-pouch-panel button:disabled{opacity:.4;cursor:default}#context-pouch-panel :focus-visible{outline:2px solid var(--vscode-focusBorder,#a798ed);outline-offset:2px}
     .cp-head,.cp-actions{display:flex;gap:7px;align-items:center;padding:11px 12px;border-bottom:1px solid #8883}.cp-head strong{flex:1}.cp-count{font-size:10px;opacity:.65}.cp-tools{padding:10px 12px;display:grid;gap:7px}.cp-tools>div{display:flex;gap:7px}.cp-tools select{min-width:0;flex:1}.cp-list{overflow:auto;min-height:70px;max-height:300px;padding:0 8px 8px}.cp-row{display:flex;align-items:flex-start;gap:7px;padding:8px;border-radius:8px}.cp-row:hover{background:#8881}.cp-row label{display:flex;align-items:flex-start;gap:8px;flex:1;cursor:pointer;min-width:0}.cp-row input{margin:3px 0}.cp-row strong{font-size:12px;display:block}.cp-row small{font-size:10px;opacity:.65;display:block;white-space:pre-wrap;overflow-wrap:anywhere}.cp-row .cp-edit{padding:3px 6px!important}.cp-footer{padding:10px 12px;border-top:1px solid #8883;display:grid;grid-template-columns:1fr 1fr;gap:7px}.cp-primary{background:var(--vscode-button-background,#6654aa)!important;color:var(--vscode-button-foreground,#fff)!important}.cp-wide{grid-column:1/-1}.cp-meta{display:flex;gap:7px;justify-content:space-between;font-size:10px}.cp-empty{padding:18px;text-align:center;opacity:.65}
     #context-pouch-panel input:not([type=checkbox]),#context-pouch-panel select,#context-pouch-panel textarea{width:100%;border:1px solid #8884;border-radius:7px;padding:7px;background:var(--vscode-input-background,#292a35)}.cp-dialog{display:none;padding:12px;overflow:auto;max-height:calc(100vh - 90px)}.cp-dialog.open{display:block}.cp-dialog label{display:block;margin:8px 0}.cp-dialog label>span{display:block;font-size:10px;opacity:.7;margin-bottom:4px}.cp-dialog textarea{resize:vertical;min-height:120px}.cp-dialog pre{font:11px/1.5 monospace;white-space:pre-wrap;overflow-wrap:anywhere;max-height:260px;overflow:auto;padding:10px;background:#8881;border-radius:8px}.cp-dialog .cp-actions{padding:10px 0 0;border:0;flex-wrap:wrap}.cp-error{font-size:11px;padding:8px 12px;color:var(--vscode-errorForeground,#ff9e9e);white-space:pre-wrap}.cp-hidden{display:none!important}
+    #context-pouch-panel{width:min(340px,calc(100vw - 24px));max-height:calc(100vh - 24px)}
+    .cp-main{display:flex;flex-direction:column;min-height:0;overflow:hidden}.cp-list{min-height:0;flex:1;max-height:260px}.cp-head,.cp-tools,.cp-footer{flex-shrink:0}.cp-error:empty{display:none}
+    .cp-mode{display:flex;gap:3px;padding:0 12px 10px}.cp-mode button{flex:1;border:0!important;font-size:11px!important;color:var(--vscode-descriptionForeground,#aaa)!important}.cp-mode button[aria-pressed=true]{background:#9980de24!important;color:var(--vscode-foreground,#eee)!important}
+    #context-pouch-panel:not(.advanced) .cp-advanced{display:none!important}#context-pouch-panel:not(.advanced) .cp-row small,#context-pouch-panel:not(.advanced) .cp-edit{display:none}#context-pouch-panel:not(.advanced) .cp-footer{grid-template-columns:1fr}#context-pouch-panel:not(.advanced) .cp-row{padding:7px 8px}#context-pouch-panel:not(.advanced) .cp-row strong{font-weight:500}.cp-head{border-bottom:0;padding-bottom:8px}.cp-tools{padding-top:0}.cp-meta{flex-wrap:wrap}.cp-dialog{min-height:0;flex:1}.cp-row label>span{overflow-wrap:anywhere}.cp-count{white-space:nowrap}
   `;
   document.documentElement.appendChild(style);
   const button = document.createElement("button");
@@ -39,16 +47,47 @@
   const panel = document.createElement("section");
   panel.id = "context-pouch-panel";
   panel.setAttribute("aria-label", "Context Pouch");
-  panel.innerHTML = `<div class="cp-head"><strong>Context Pouch</strong><span class="cp-count"></span><button data-action="graph" title="Open rule graph in a new tab">Graph ↗</button><button data-action="close" aria-label="Close Pouch">×</button></div><div class="cp-error" role="status"></div><div class="cp-main"><div class="cp-tools"><input class="cp-search" aria-label="Search rules" placeholder="Search rules…"><div><select class="cp-scope" aria-label="Filter by library"><option value="all">All libraries</option></select><select class="cp-category" aria-label="Filter by category"><option value="all">All categories</option></select></div><div><select class="cp-preset" aria-label="Task preset"><option value="">Choose a task preset…</option></select><button data-action="preset">Save preset</button></div></div><div class="cp-list"></div><div class="cp-footer"><button class="cp-primary" data-action="preview">Preview & inject</button><button data-action="reinforce">Reinforce selected</button><div class="cp-wide cp-meta"><button data-action="add">+ Rule</button><button data-action="clear">Clear selection</button><button data-action="remove">Remove draft block</button></div></div></div><div class="cp-dialog"></div>`;
+  panel.setAttribute("role", "dialog");
+  panel.setAttribute("aria-modal", "false");
+  button.setAttribute("aria-controls", panel.id);
+  button.setAttribute("aria-expanded", "false");
+  panel.innerHTML = `<div class="cp-head"><strong>Pouch</strong><span class="cp-count"></span><button data-action="graph" title="Open rule graph in a new tab" aria-label="Open rule graph">Graph ↗</button><button data-action="close" aria-label="Close Pouch">×</button></div><div class="cp-mode" aria-label="Pouch mode"><button data-action="simple" aria-pressed="true">Simple</button><button data-action="advanced" aria-pressed="false">Advanced</button></div><div class="cp-error" role="status"></div><div class="cp-main"><div class="cp-tools"><input class="cp-search" aria-label="Search rules" placeholder="Find a rule…"><div class="cp-advanced"><select class="cp-scope" aria-label="Filter by library"><option value="all">All libraries</option></select><select class="cp-category" aria-label="Filter by category"><option value="all">All categories</option></select></div><div><select class="cp-preset" aria-label="Task preset"><option value="">Choose a preset…</option></select><button class="cp-advanced" data-action="preset">Save preset</button></div></div><div class="cp-list"></div><div class="cp-footer"><button class="cp-primary" data-action="preview">Review selected rules</button><button class="cp-advanced" data-action="reinforce">Reinforce selected</button><div class="cp-wide cp-meta cp-advanced"><button data-action="add">+ Rule</button><button data-action="clear">Clear selection</button><button data-action="remove">Remove draft block</button></div></div></div><div class="cp-dialog"></div>`;
+  function setMode(next) {
+    advanced = next;
+    panel.classList.toggle("advanced", advanced);
+    panel
+      .querySelector('[data-action="simple"]')
+      .setAttribute("aria-pressed", String(!advanced));
+    panel
+      .querySelector('[data-action="advanced"]')
+      .setAttribute("aria-pressed", String(advanced));
+    // Hidden advanced filters must not silently hide rules in Simple mode.
+    if (!advanced) {
+      filter = "all";
+      panel.querySelector(".cp-scope").value = "all";
+    }
+    try {
+      localStorage.setItem(
+        "context-pouch.mode",
+        advanced ? "advanced" : "simple",
+      );
+    } catch (_) {}
+    render();
+    position();
+  }
+  function dismiss(restoreFocus = false) {
+    panel.classList.remove("open");
+    button.setAttribute("aria-expanded", "false");
+    if (restoreFocus) button.focus();
+    // Keep an unfinished editor intact when temporarily dismissed.
+  }
+
   document.body.append(button, panel);
   const error = (message) => {
     panel.querySelector(".cp-error").textContent = message || "";
   };
   async function request(action, data = {}) {
     if (!rpc) {
-      error(
-        "Connecting to Pouch… If this persists, run Install / Repair and reload VS Code.",
-      );
       return;
     }
     busy = true;
@@ -91,11 +130,57 @@
       Math.max(8, Math.min(innerWidth - 38, r.right - 31)) + "px";
     button.style.top =
       Math.max(8, Math.min(innerHeight - 38, r.top - 35)) + "px";
-    panel.style.right = Math.max(8, innerWidth - r.right) + "px";
-    panel.style.top = Math.max(10, r.top - panel.offsetHeight - 10) + "px";
+    if (!panel.classList.contains("open")) return;
+    const gap = 16,
+      margin = 12;
+    // Include the composer shell's padding when choosing an outside margin.
+    const shell = ed.parentElement?.getBoundingClientRect();
+    const leftEdge =
+      shell && shell.width < innerWidth * 0.95 ? shell.left : r.left - 16;
+    const rightEdge =
+      shell && shell.width < innerWidth * 0.95 ? shell.right : r.right + 16;
+    const leftRoom = leftEdge - gap - margin;
+    const rightRoom = innerWidth - rightEdge - gap - margin;
+    const sideRoom = Math.max(leftRoom, rightRoom);
+    const docked = sideRoom >= 280;
+    const panelWidth = Math.min(
+      advanced ? 340 : 300,
+      docked ? sideRoom : Math.max(260, innerWidth * 0.42),
+      innerWidth - margin * 2,
+    );
+    panel.style.width = panelWidth + "px";
+    panel.style.maxHeight =
+      Math.max(
+        140,
+        Math.min(innerHeight - 24, docked ? 560 : innerHeight * 0.48),
+      ) + "px";
+    panel.dataset.placement = docked
+      ? rightRoom >= leftRoom
+        ? "right"
+        : "left"
+      : "edge";
+    const left = docked
+      ? rightRoom >= leftRoom
+        ? rightEdge + gap
+        : leftEdge - gap - panelWidth
+      : innerWidth - margin - panelWidth;
+    panel.style.left =
+      Math.max(margin, Math.min(innerWidth - panelWidth - margin, left)) + "px";
+    panel.style.right = "auto";
+    // Edge fallback stays near the top corner, away from the draft at the bottom.
+    panel.style.top =
+      (docked
+        ? Math.max(
+            margin,
+            Math.min(innerHeight - panel.offsetHeight - margin, r.top),
+          )
+        : margin) + "px";
   }
+
   function render() {
     if (!state) {
+      for (const action of ["preview", "reinforce", "preset"])
+        panel.querySelector(`[data-action="${action}"]`).disabled = true;
       panel.querySelector(".cp-list").innerHTML =
         '<div class="cp-empty">Connecting to your library…</div>';
       return;
@@ -142,7 +227,7 @@
       ? shown
           .map(
             (r) =>
-              `<div class="cp-row"><label><input type="checkbox" data-key="${esc(r.key)}" ${state.selected.includes(r.key) ? "checked" : ""}><span><strong>${esc(r.title)}</strong><small>${esc(r.text)}</small><small>${esc(r.scope)} · ${esc(r.category)}</small></span></label><button class="cp-edit" data-action="edit" data-key="${esc(r.key)}" aria-label="Edit ${esc(r.title)}">✎</button></div>`,
+              `<div class="cp-row"><label title="${esc(r.text)}"><input type="checkbox" data-key="${esc(r.key)}" ${state.selected.includes(r.key) ? "checked" : ""}><span><strong>${esc(r.title)}</strong><small>${esc(r.text)}</small><small>${esc(r.scope)} · ${esc(r.category)}</small></span></label><button class="cp-edit" data-action="edit" data-key="${esc(r.key)}" aria-label="Edit ${esc(r.title)}">✎</button></div>`,
           )
           .join("")
       : '<div class="cp-empty">No matching rules. Add a rule or explore the graph.</div>';
@@ -289,7 +374,7 @@
         "Could not verify the draft update. Review it before sending.",
       );
     closeDialog();
-    panel.classList.remove("open");
+    dismiss();
   }
   function preview(mode) {
     const payload = M.payload(picked(), mode),
@@ -338,9 +423,10 @@
     const action = el.dataset.action;
     try {
       if (action === "close") {
-        panel.classList.remove("open");
-        button.focus();
-      } else if (action === "cancel") closeDialog();
+        dismiss(true);
+      } else if (action === "simple" || action === "advanced")
+        setMode(action === "advanced");
+      else if (action === "cancel") closeDialog();
       else if (action === "graph") await request("graph");
       else if (!state || busy) return;
       else if (action === "clear") await request("select", { keys: [] });
@@ -397,20 +483,40 @@
     }
   });
   button.addEventListener("click", () => {
-    panel.classList.toggle("open");
+    if (panel.classList.contains("open")) {
+      dismiss();
+      return;
+    }
+    panel.classList.add("open");
+    button.setAttribute("aria-expanded", "true");
     if (panel.classList.contains("open")) {
       request("state").catch(() => {});
       render();
       position();
-      panel.querySelector(".cp-search").focus();
+      (
+        panel.querySelector(".cp-dialog.open input, .cp-dialog.open button") ||
+        panel.querySelector(".cp-search")
+      ).focus();
     }
   });
+  document.addEventListener(
+    "pointerdown",
+    (e) => {
+      if (
+        panel.classList.contains("open") &&
+        !e.composedPath().includes(panel) &&
+        !e.composedPath().includes(button)
+      )
+        dismiss();
+    },
+    true,
+  );
+  window.addEventListener("blur", () => dismiss());
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && panel.classList.contains("open")) {
       if (panel.querySelector(".cp-dialog.open")) closeDialog();
       else {
-        panel.classList.remove("open");
-        button.focus();
+        dismiss(true);
       }
       e.stopPropagation();
     }
@@ -476,6 +582,6 @@
       );
     }
   }, 15000);
-  render();
+  setMode(advanced);
   position();
 })();
