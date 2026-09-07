@@ -1,239 +1,481 @@
-;(() => {
+(() => {
   if (window.__contextPouchLoaded) return;
   window.__contextPouchLoaded = true;
-
-  const STORAGE_KEY = 'context-pouch.rules.v1';
-  const SELECTED_KEY = 'context-pouch.selected.v1';
-  const DEFAULT_RULES = [
-    { id: 'ui-existing-buttons', category: 'UI', title: 'Use existing app buttons', text: 'Use the existing app button components. Do not create replacement button implementations.' },
-    { id: 'ui-no-new-buttons', category: 'UI', title: 'Do not add new buttons', text: 'Do not add new buttons, CTAs, or controls unless they were explicitly requested.' },
-    { id: 'ui-reuse-components', category: 'UI', title: 'Reuse existing components', text: 'Reuse existing project components and patterns before creating new UI components.' },
-    { id: 'ui-preserve-layout', category: 'UI', title: 'Preserve current layout', text: 'Preserve the current layout and visual structure except for the changes explicitly requested.' },
-    { id: 'assets-generate', category: 'Assets', title: 'Generate/use icons when needed', text: 'When the design requires an icon or visual asset, use or generate an appropriate asset instead of replacing it with extra text or a new button.' },
-    { id: 'nav-no-change', category: 'Project', title: 'Do not change navigation', text: 'Do not change routes, navigation structure, or navigation behavior unless explicitly requested.' },
-    { id: 'code-no-deps', category: 'Code', title: 'No new dependencies', text: 'Do not add a new dependency unless the task cannot reasonably be completed with the existing stack.' },
-    { id: 'code-no-unrelated', category: 'Code', title: 'Do not refactor unrelated code', text: 'Do not refactor, rename, or modify unrelated code while completing this task.' }
-  ];
-
-  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
-  const uid = () => 'r-' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
-  const loadRules = () => {
-    try {
-      const v = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
-      if (Array.isArray(v) && v.length) return v;
-    } catch (_) {}
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_RULES));
-    return DEFAULT_RULES.map(r => ({...r}));
-  };
-  const loadSelected = () => {
-    try { return new Set(JSON.parse(sessionStorage.getItem(SELECTED_KEY) || '[]')); } catch (_) { return new Set(); }
-  };
-  let rules = loadRules();
-  let selected = loadSelected();
-  let filter = 'All';
-  let search = '';
-  let editingId = null;
-
-  const save = () => localStorage.setItem(STORAGE_KEY, JSON.stringify(rules));
-  const saveSelected = () => sessionStorage.setItem(SELECTED_KEY, JSON.stringify([...selected]));
-
-  const style = document.createElement('style');
-  style.id = 'context-pouch-style';
+  const M = window.ContextPouchModel;
+  const esc = (s) =>
+    String(s).replace(
+      /[&<>"']/g,
+      (c) =>
+        ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#039;",
+        })[c],
+    );
+  let state = null,
+    rpc,
+    editor = null,
+    filter = "all",
+    search = "",
+    editing = null,
+    busy = false;
+  const style = document.createElement("style");
   style.textContent = `
-    #context-pouch-button{position:fixed;z-index:2147483600;width:30px;height:30px;border-radius:10px;border:1px solid color-mix(in srgb,currentColor 16%,transparent);background:color-mix(in srgb,var(--vscode-input-background,#2b2d3b) 86%,#ffffff 14%);color:var(--vscode-foreground,#d7d9e7);display:none;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.16);padding:0;transition:transform .12s ease,background .12s ease}
-    #context-pouch-button:hover{transform:translateY(-1px);background:color-mix(in srgb,var(--vscode-input-background,#2b2d3b) 76%,#ffffff 24%)}
-    #context-pouch-button svg{width:16px;height:16px;pointer-events:none}
-    #context-pouch-panel{position:fixed;z-index:2147483601;width:min(390px,calc(100vw - 20px));max-height:min(620px,calc(100vh - 24px));overflow:hidden;display:none;flex-direction:column;border:1px solid color-mix(in srgb,var(--vscode-foreground,#ddd) 14%,transparent);border-radius:14px;background:var(--vscode-editorWidget-background,#1e1f2a);color:var(--vscode-foreground,#e8e8ef);box-shadow:0 16px 44px rgba(0,0,0,.38);font:12px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
-    #context-pouch-panel.open{display:flex}
-    .cp-head{display:flex;align-items:center;gap:8px;padding:12px 12px 9px;border-bottom:1px solid color-mix(in srgb,currentColor 10%,transparent)}
-    .cp-title{font-weight:700;font-size:13px;flex:1}.cp-count{font-size:11px;opacity:.65}.cp-icon-btn{border:0;background:transparent;color:inherit;opacity:.72;cursor:pointer;border-radius:7px;padding:5px}.cp-icon-btn:hover{background:color-mix(in srgb,currentColor 10%,transparent);opacity:1}
-    .cp-tools{padding:10px 12px 8px;display:flex;gap:7px;flex-wrap:wrap}.cp-search{width:100%;box-sizing:border-box;border:1px solid color-mix(in srgb,currentColor 14%,transparent);border-radius:9px;padding:8px 10px;background:var(--vscode-input-background,#2b2d3b);color:var(--vscode-input-foreground,#fff);outline:none}.cp-search:focus{border-color:var(--vscode-focusBorder,#6f8cff)}
-    .cp-chip{font-size:10px;border:1px solid color-mix(in srgb,currentColor 13%,transparent);background:transparent;color:inherit;border-radius:999px;padding:4px 8px;cursor:pointer;opacity:.8}.cp-chip.active{background:color-mix(in srgb,var(--vscode-button-background,#4f67c8) 35%,transparent);opacity:1}
-    .cp-list{overflow:auto;padding:3px 8px 8px;min-height:80px}.cp-row{display:grid;grid-template-columns:22px 1fr auto;gap:7px;align-items:start;padding:8px;border-radius:9px}.cp-row:hover{background:color-mix(in srgb,currentColor 7%,transparent)}.cp-row input{margin-top:2px}.cp-row-title{font-weight:600;font-size:12px}.cp-row-text{font-size:10.5px;opacity:.62;margin-top:2px}.cp-badge{display:inline-block;margin-top:3px;font-size:9px;opacity:.55}.cp-row-actions{display:flex;gap:1px;opacity:.32}.cp-row:hover .cp-row-actions{opacity:.85}
-    .cp-empty{padding:20px;text-align:center;opacity:.55}.cp-footer{padding:10px 12px 12px;border-top:1px solid color-mix(in srgb,currentColor 10%,transparent);display:grid;grid-template-columns:1fr 1fr;gap:7px}.cp-btn{border:0;border-radius:9px;padding:8px 10px;cursor:pointer;font-weight:600;font-size:11px}.cp-primary{background:var(--vscode-button-background,#5066c8);color:var(--vscode-button-foreground,#fff)}.cp-secondary{background:var(--vscode-button-secondaryBackground,#343646);color:var(--vscode-button-secondaryForeground,#eee)}.cp-btn:disabled{opacity:.4;cursor:default}.cp-footer-meta{grid-column:1/-1;display:flex;align-items:center;gap:8px}.cp-link{border:0;background:transparent;color:var(--vscode-textLink-foreground,#7aa2ff);font-size:10px;cursor:pointer;padding:0}.cp-spacer{flex:1}
-    #context-pouch-modal{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.48);padding:16px;z-index:4}#context-pouch-modal.open{display:flex}.cp-card{width:100%;background:var(--vscode-editorWidget-background,#222431);border:1px solid color-mix(in srgb,currentColor 14%,transparent);border-radius:12px;padding:12px;box-shadow:0 12px 32px rgba(0,0,0,.3)}.cp-field{display:block;margin:8px 0}.cp-field span{display:block;font-size:10px;opacity:.65;margin-bottom:4px}.cp-field input,.cp-field textarea{width:100%;box-sizing:border-box;background:var(--vscode-input-background,#2b2d3b);color:inherit;border:1px solid color-mix(in srgb,currentColor 14%,transparent);border-radius:8px;padding:7px 8px;font:inherit;outline:none}.cp-field textarea{min-height:86px;resize:vertical}.cp-modal-actions{display:flex;justify-content:flex-end;gap:7px;margin-top:10px}
-    #context-pouch-toast{position:fixed;z-index:2147483602;display:none;padding:7px 10px;border-radius:8px;background:var(--vscode-notifications-background,#252735);color:var(--vscode-notifications-foreground,#fff);box-shadow:0 8px 24px rgba(0,0,0,.3);font:11px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;pointer-events:none}
+    #context-pouch-button{position:fixed;z-index:2147483600;width:30px;height:30px;display:none;align-items:center;justify-content:center;border-radius:9px;border:1px solid #8885;background:var(--vscode-input-background,#282733);color:var(--vscode-foreground,#eee);cursor:pointer;padding:5px}
+    #context-pouch-button svg{width:19px;height:19px}#context-pouch-panel{position:fixed;z-index:2147483601;display:none;flex-direction:column;width:min(410px,calc(100vw - 20px));max-height:calc(100vh - 24px);background:var(--vscode-editorWidget-background,#20212b);color:var(--vscode-foreground,#eee);border:1px solid #8885;border-radius:14px;box-shadow:0 16px 44px #0006;font:12px/1.45 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow:hidden}
+    #context-pouch-panel.open{display:flex}#context-pouch-panel *{box-sizing:border-box}#context-pouch-panel button,#context-pouch-panel input,#context-pouch-panel select,#context-pouch-panel textarea{font:inherit;color:inherit}#context-pouch-panel button{cursor:pointer;border:1px solid #8884;border-radius:7px;background:transparent;padding:6px 9px}#context-pouch-panel button:hover{background:#8882}#context-pouch-panel button:disabled{opacity:.4;cursor:default}#context-pouch-panel :focus-visible{outline:2px solid var(--vscode-focusBorder,#a798ed);outline-offset:2px}
+    .cp-head,.cp-actions{display:flex;gap:7px;align-items:center;padding:11px 12px;border-bottom:1px solid #8883}.cp-head strong{flex:1}.cp-count{font-size:10px;opacity:.65}.cp-tools{padding:10px 12px;display:grid;gap:7px}.cp-tools>div{display:flex;gap:7px}.cp-tools select{min-width:0;flex:1}.cp-list{overflow:auto;min-height:70px;max-height:300px;padding:0 8px 8px}.cp-row{display:flex;align-items:flex-start;gap:7px;padding:8px;border-radius:8px}.cp-row:hover{background:#8881}.cp-row label{display:flex;align-items:flex-start;gap:8px;flex:1;cursor:pointer;min-width:0}.cp-row input{margin:3px 0}.cp-row strong{font-size:12px;display:block}.cp-row small{font-size:10px;opacity:.65;display:block;white-space:pre-wrap;overflow-wrap:anywhere}.cp-row .cp-edit{padding:3px 6px!important}.cp-footer{padding:10px 12px;border-top:1px solid #8883;display:grid;grid-template-columns:1fr 1fr;gap:7px}.cp-primary{background:var(--vscode-button-background,#6654aa)!important;color:var(--vscode-button-foreground,#fff)!important}.cp-wide{grid-column:1/-1}.cp-meta{display:flex;gap:7px;justify-content:space-between;font-size:10px}.cp-empty{padding:18px;text-align:center;opacity:.65}
+    #context-pouch-panel input:not([type=checkbox]),#context-pouch-panel select,#context-pouch-panel textarea{width:100%;border:1px solid #8884;border-radius:7px;padding:7px;background:var(--vscode-input-background,#292a35)}.cp-dialog{display:none;padding:12px;overflow:auto;max-height:calc(100vh - 90px)}.cp-dialog.open{display:block}.cp-dialog label{display:block;margin:8px 0}.cp-dialog label>span{display:block;font-size:10px;opacity:.7;margin-bottom:4px}.cp-dialog textarea{resize:vertical;min-height:120px}.cp-dialog pre{font:11px/1.5 monospace;white-space:pre-wrap;overflow-wrap:anywhere;max-height:260px;overflow:auto;padding:10px;background:#8881;border-radius:8px}.cp-dialog .cp-actions{padding:10px 0 0;border:0;flex-wrap:wrap}.cp-error{font-size:11px;padding:8px 12px;color:var(--vscode-errorForeground,#ff9e9e);white-space:pre-wrap}.cp-hidden{display:none!important}
   `;
   document.documentElement.appendChild(style);
-
-  const button = document.createElement('button');
-  button.id = 'context-pouch-button';
-  button.title = 'Context Pouch';
-  button.setAttribute('aria-label', 'Open Context Pouch');
-  button.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7h8l1.2 3.2c.8 2.1 1.3 4.2 1.3 6.5A2.3 2.3 0 0 1 16.2 19H7.8a2.3 2.3 0 0 1-2.3-2.3c0-2.3.5-4.4 1.3-6.5L8 7Z"/><path d="M9 7c0-1.8 1.2-3 3-3s3 1.2 3 3"/><path d="M9 12h6"/></svg>';
-  document.body.appendChild(button);
-
-  const panel = document.createElement('div');
-  panel.id = 'context-pouch-panel';
-  panel.innerHTML = `
-    <div class="cp-head"><div class="cp-title">Context Pouch</div><div class="cp-count"></div><button class="cp-icon-btn" data-cp="add" title="Add rule">＋</button><button class="cp-icon-btn" data-cp="close" title="Close">✕</button></div>
-    <div class="cp-tools"><input class="cp-search" placeholder="Search rules…"/><div class="cp-chips"></div></div>
-    <div class="cp-list"></div>
-    <div class="cp-footer">
-      <button class="cp-btn cp-primary" data-cp="inject">Inject selected</button>
-      <button class="cp-btn cp-secondary" data-cp="reinforce">Reinforce selected</button>
-      <div class="cp-footer-meta"><button class="cp-link" data-cp="clear">Clear selection</button><span class="cp-spacer"></span><button class="cp-link" data-cp="reset">Reset defaults</button></div>
-    </div>
-    <div id="context-pouch-modal"><div class="cp-card"><strong class="cp-modal-title">Add rule</strong><label class="cp-field"><span>Title</span><input data-cp-field="title" maxlength="70"/></label><label class="cp-field"><span>Category</span><input data-cp-field="category" maxlength="30" placeholder="UI, Code, Project…"/></label><label class="cp-field"><span>Rule text injected into Codex</span><textarea data-cp-field="text" maxlength="500"></textarea></label><div class="cp-modal-actions"><button class="cp-btn cp-secondary" data-cp="cancel-edit">Cancel</button><button class="cp-btn cp-primary" data-cp="save-edit">Save rule</button></div></div></div>`;
-  document.body.appendChild(panel);
-
-  const toast = document.createElement('div');
-  toast.id = 'context-pouch-toast';
-  document.body.appendChild(toast);
-
-  const editorCandidates = () => [...document.querySelectorAll('.ProseMirror')].filter(el => {
-    const r = el.getBoundingClientRect();
-    const cs = getComputedStyle(el);
-    return r.width > 120 && r.height > 20 && cs.visibility !== 'hidden' && cs.display !== 'none';
-  });
-  const findEditor = () => editorCandidates().sort((a,b) => b.getBoundingClientRect().width - a.getBoundingClientRect().width)[0] || null;
-
-  function positionUI() {
-    const ed = findEditor();
-    if (!ed) { button.style.display = 'none'; return; }
-    const r = ed.getBoundingClientRect();
-    button.style.display = 'flex';
-    const left = Math.min(window.innerWidth - 38, Math.max(8, r.right - 31));
-    const top = Math.min(window.innerHeight - 38, Math.max(8, r.top - 35));
-    button.style.left = left + 'px';
-    button.style.top = top + 'px';
-    const rightGap = Math.max(8, window.innerWidth - r.right);
-    panel.style.right = rightGap + 'px';
-    panel.style.left = 'auto';
-    const wantedBottom = Math.max(10, window.innerHeight - r.top + 8);
-    panel.style.bottom = wantedBottom + 'px';
-    panel.style.top = 'auto';
-    requestAnimationFrame(() => {
-      if (!panel.classList.contains('open')) return;
-      const pr = panel.getBoundingClientRect();
-      if (pr.top < 10) { panel.style.top = '10px'; panel.style.bottom = 'auto'; }
-    });
-    toast.style.right = rightGap + 'px';
-    toast.style.bottom = Math.max(10, window.innerHeight - r.top + 8) + 'px';
-  }
-
-  function categories() { return ['All', ...new Set(rules.map(r => r.category || 'Other'))]; }
-  function render() {
-    const chips = panel.querySelector('.cp-chips');
-    chips.innerHTML = categories().map(c => '<button class="cp-chip ' + (c===filter?'active':'') + '" data-cat="' + esc(c) + '">' + esc(c) + '</button>').join('');
-    const q = search.trim().toLowerCase();
-    const shown = rules.filter(r => (filter === 'All' || (r.category || 'Other') === filter) && (!q || (r.title + ' ' + r.text + ' ' + r.category).toLowerCase().includes(q)));
-    const list = panel.querySelector('.cp-list');
-    list.innerHTML = shown.length ? shown.map(r => `
-      <div class="cp-row" data-id="${esc(r.id)}">
-        <input type="checkbox" data-cp="toggle" ${selected.has(r.id)?'checked':''}/>
-        <label><div class="cp-row-title">${esc(r.title)}</div><div class="cp-row-text">${esc(r.text)}</div><span class="cp-badge">${esc(r.category || 'Other')}</span></label>
-        <div class="cp-row-actions"><button class="cp-icon-btn" data-cp="edit" title="Edit">✎</button><button class="cp-icon-btn" data-cp="delete" title="Delete">×</button></div>
-      </div>`).join('') : '<div class="cp-empty">No matching rules.</div>';
-    const n = selected.size;
-    panel.querySelector('.cp-count').textContent = n ? n + ' selected' : '';
-    panel.querySelector('[data-cp="inject"]').disabled = !n;
-    panel.querySelector('[data-cp="reinforce"]').disabled = !n;
-  }
-
-  function showToast(msg) {
-    toast.textContent = msg; toast.style.display = 'block'; positionUI();
-    clearTimeout(showToast.t); showToast.t = setTimeout(() => toast.style.display = 'none', 1800);
-  }
-
-  function setCaretToEnd(el) {
-    const sel = window.getSelection();
-    const range = document.createRange();
-    range.selectNodeContents(el); range.collapse(false); sel.removeAllRanges(); sel.addRange(range);
-  }
-
-  function insertIntoComposer(text) {
-    const ed = findEditor();
-    if (!ed) return false;
+  const button = document.createElement("button");
+  button.id = "context-pouch-button";
+  button.title = "Context Pouch";
+  button.setAttribute("aria-label", "Open Context Pouch");
+  button.innerHTML =
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7h8l1.2 3.2c.8 2.1 1.3 4.2 1.3 6.5A2.3 2.3 0 0 1 16.2 19H7.8a2.3 2.3 0 0 1-2.3-2.3c0-2.3.5-4.4 1.3-6.5L8 7Z"/><path d="M9 7c0-1.8 1.2-3 3-3s3 1.2 3 3M9 12h6"/></svg>';
+  const panel = document.createElement("section");
+  panel.id = "context-pouch-panel";
+  panel.setAttribute("aria-label", "Context Pouch");
+  panel.innerHTML = `<div class="cp-head"><strong>Context Pouch</strong><span class="cp-count"></span><button data-action="graph" title="Open rule graph in a new tab">Graph ↗</button><button data-action="close" aria-label="Close Pouch">×</button></div><div class="cp-error" role="status"></div><div class="cp-main"><div class="cp-tools"><input class="cp-search" aria-label="Search rules" placeholder="Search rules…"><div><select class="cp-scope" aria-label="Filter by library"><option value="all">All libraries</option></select><select class="cp-category" aria-label="Filter by category"><option value="all">All categories</option></select></div><div><select class="cp-preset" aria-label="Task preset"><option value="">Choose a task preset…</option></select><button data-action="preset">Save preset</button></div></div><div class="cp-list"></div><div class="cp-footer"><button class="cp-primary" data-action="preview">Preview & inject</button><button data-action="reinforce">Reinforce selected</button><div class="cp-wide cp-meta"><button data-action="add">+ Rule</button><button data-action="clear">Clear selection</button><button data-action="remove">Remove draft block</button></div></div></div><div class="cp-dialog"></div>`;
+  document.body.append(button, panel);
+  const error = (message) => {
+    panel.querySelector(".cp-error").textContent = message || "";
+  };
+  async function request(action, data = {}) {
+    if (!rpc) {
+      error(
+        "Connecting to Pouch… If this persists, run Install / Repair and reload VS Code.",
+      );
+      return;
+    }
+    busy = true;
     try {
-      ed.focus(); setCaretToEnd(ed);
-      const ok = document.execCommand('insertText', false, text);
-      if (ok) return true;
+      error("");
+      return await rpc(action, { revision: state?.revision, ...data });
+    } catch (e) {
+      error(e.message);
+      if (action !== "state") rpc("state").catch(() => {});
+      throw e;
+    } finally {
+      busy = false;
+    }
+  }
+  function findEditor() {
+    if (editor?.isConnected && editor.getBoundingClientRect().width > 0)
+      return editor;
+    return (
+      [...document.querySelectorAll('.ProseMirror[contenteditable="true"]')]
+        .filter((el) => {
+          const r = el.getBoundingClientRect();
+          return r.width > 100 && r.height > 10;
+        })
+        .sort(
+          (a, b) =>
+            b.getBoundingClientRect().bottom - a.getBoundingClientRect().bottom,
+        )[0] || null
+    );
+  }
+  document.addEventListener("focusin", (e) => {
+    const ed = e.target.closest?.(".ProseMirror");
+    if (ed?.getAttribute("contenteditable") === "true") editor = ed;
+  });
+  function position() {
+    const ed = findEditor();
+    button.style.display = ed ? "flex" : "none";
+    if (!ed) return;
+    const r = ed.getBoundingClientRect();
+    button.style.left =
+      Math.max(8, Math.min(innerWidth - 38, r.right - 31)) + "px";
+    button.style.top =
+      Math.max(8, Math.min(innerHeight - 38, r.top - 35)) + "px";
+    panel.style.right = Math.max(8, innerWidth - r.right) + "px";
+    panel.style.top = Math.max(10, r.top - panel.offsetHeight - 10) + "px";
+  }
+  function render() {
+    if (!state) {
+      panel.querySelector(".cp-list").innerHTML =
+        '<div class="cp-empty">Connecting to your library…</div>';
+      return;
+    }
+    const scope = panel.querySelector(".cp-scope");
+    const oldScope = scope.value;
+    scope.innerHTML =
+      '<option value="all">All libraries</option>' +
+      state.scopes
+        .map(
+          (s) =>
+            `<option value="${s.id}">${esc(s.id === "project" ? "Project · " + s.name : s.name)}</option>`,
+        )
+        .join("");
+    scope.value = state.scopes.some((s) => s.id === oldScope)
+      ? oldScope
+      : "all";
+    const cats = [...new Set(state.rules.map((r) => r.category))];
+    if (!cats.includes(filter)) filter = "all";
+    panel.querySelector(".cp-category").innerHTML =
+      '<option value="all">All categories</option>' +
+      cats
+        .map(
+          (c) =>
+            `<option value="${esc(c)}" ${c === filter ? "selected" : ""}>${esc(c)}</option>`,
+        )
+        .join("");
+    panel.querySelector(".cp-preset").innerHTML =
+      '<option value="">Choose a task preset…</option>' +
+      state.presets
+        .map(
+          (p) =>
+            `<option value="${esc(p.key)}">${esc(p.title)} · ${esc(p.scope)}</option>`,
+        )
+        .join("");
+    const q = search.toLowerCase();
+    const shown = state.rules.filter(
+      (r) =>
+        (scope.value === "all" || r.scope === scope.value) &&
+        (filter === "all" || r.category === filter) &&
+        `${r.title} ${r.text} ${r.category}`.toLowerCase().includes(q),
+    );
+    panel.querySelector(".cp-list").innerHTML = shown.length
+      ? shown
+          .map(
+            (r) =>
+              `<div class="cp-row"><label><input type="checkbox" data-key="${esc(r.key)}" ${state.selected.includes(r.key) ? "checked" : ""}><span><strong>${esc(r.title)}</strong><small>${esc(r.text)}</small><small>${esc(r.scope)} · ${esc(r.category)}</small></span></label><button class="cp-edit" data-action="edit" data-key="${esc(r.key)}" aria-label="Edit ${esc(r.title)}">✎</button></div>`,
+          )
+          .join("")
+      : '<div class="cp-empty">No matching rules. Add a rule or explore the graph.</div>';
+    panel.querySelector(".cp-count").textContent =
+      `${state.selected.length} selected`;
+    for (const a of ["preview", "reinforce", "preset"])
+      panel.querySelector(`[data-action="${a}"]`).disabled =
+        !state.selected.length;
+    position();
+  }
+  const picked = () =>
+    state.rules.filter((r) => state.selected.includes(r.key));
+  function dialog(html) {
+    panel.querySelector(".cp-main").classList.add("cp-hidden");
+    const d = panel.querySelector(".cp-dialog");
+    d.innerHTML = html;
+    d.classList.add("open");
+    position();
+    d.querySelector("input, button")?.focus();
+  }
+  function closeDialog() {
+    panel.querySelector(".cp-dialog").classList.remove("open");
+    panel.querySelector(".cp-main").classList.remove("cp-hidden");
+    editing = null;
+    position();
+  }
+  function edit(rule) {
+    editing = rule || null;
+    dialog(
+      `<strong>${rule ? "Edit rule" : "New rule"}</strong><label><span>Library</span><select name="scope" ${rule ? "disabled" : ""}>${state.scopes
+        .filter((s) => s.writable)
+        .map(
+          (s) =>
+            `<option value="${s.id}" ${rule?.scope === s.id ? "selected" : ""}>${esc(s.name)}</option>`,
+        )
+        .join(
+          "",
+        )}</select></label><label><span>Title</span><input name="title" maxlength="100" value="${esc(rule?.title || "")}"></label><label><span>Category</span><input name="category" maxlength="50" value="${esc(rule?.category || "Other")}"></label><label><span>Rule text</span><textarea name="text" maxlength="5000">${esc(rule?.text || "")}</textarea></label><div class="cp-actions"><button class="cp-primary" data-action="save">Save rule</button><button data-action="cancel">Cancel</button>${rule ? '<button data-action="delete">Delete rule</button>' : ""}</div>`,
+    );
+  }
+  // Map only editor text to DOM positions. Attachment nodes are never replaced.
+  function domText(ed) {
+    let text = "";
+    const points = [];
+    const visit = (node) => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        for (let i = 0; i < node.textContent.length; i++) {
+          points.push({ node, offset: i });
+          text += node.textContent[i];
+        }
+      } else {
+        if (node !== ed && node.getAttribute?.("contenteditable") === "false") {
+          points.push(null);
+          text += "\ufffc";
+          return;
+        }
+        if (node.nodeName === "BR") {
+          points.push(null);
+          text += "\n";
+        }
+        for (const child of node.childNodes) visit(child);
+        if (["P", "DIV", "LI"].includes(node.nodeName) && node !== ed) {
+          points.push(null);
+          text += "\n";
+        }
+      }
+    };
+    visit(ed);
+    return { text, points };
+  }
+  function writeBlock(block) {
+    const ed = findEditor();
+    if (!ed)
+      throw new Error(
+        "No active Codex composer. Click your draft and try again.",
+      );
+    const initial = domText(ed).text;
+    const ranges = M.blocks(initial);
+    if (!ranges.length && !block)
+      throw new Error("There is no Pouch block in this draft.");
+    // Refuse malformed/truncated markers rather than adding competing instructions.
+    if (!ranges.length && initial.includes("[CONTEXT POUCH"))
+      throw new Error(
+        "The existing Pouch block is incomplete. Remove it from the draft manually first.",
+      );
+    ed.focus();
+    if (ranges.length) {
+      for (let i = ranges.length - 1; i >= 0; i--) {
+        const map = domText(ed),
+          rangeInfo = M.blocks(map.text)[i];
+        if (!rangeInfo)
+          throw new Error("The composer changed. Review the draft and retry.");
+        if (map.text.slice(rangeInfo.from, rangeInfo.to).includes("\ufffc"))
+          throw new Error(
+            "Move attachments outside the Pouch block before replacing it.",
+          );
+        const start = map.points[rangeInfo.from],
+          end = map.points[rangeInfo.to - 1];
+        if (!start || !end)
+          throw new Error(
+            "Cannot safely locate this block. Remove it manually.",
+          );
+        const range = document.createRange();
+        range.setStart(start.node, start.offset);
+        range.setEnd(end.node, end.offset + 1);
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+        if (
+          !document.execCommand(
+            i === 0 && block ? "insertText" : "delete",
+            false,
+            i === 0 ? block : "",
+          )
+        )
+          throw new Error(
+            "Codex rejected this edit. The draft may be partially updated; review it before retrying.",
+          );
+      }
+    } else {
+      const range = document.createRange();
+      range.selectNodeContents(ed);
+      range.collapse(false);
+      const selection = window.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(range);
+      if (
+        !document.execCommand(
+          "insertText",
+          false,
+          (initial.trim() ? "\n\n" : "") + block,
+        )
+      )
+        throw new Error(
+          "Codex rejected the insertion. Run Install / Repair and reload.",
+        );
+    }
+    const after = domText(ed).text;
+    if (
+      (block && !after.includes(block.split("\n")[0])) ||
+      (!block && M.blocks(after).length)
+    )
+      throw new Error(
+        "Could not verify the draft update. Review it before sending.",
+      );
+    closeDialog();
+    panel.classList.remove("open");
+  }
+  function preview(mode) {
+    const payload = M.payload(picked(), mode),
+      count = M.blocks(
+        domText(findEditor() || document.createElement("div")).text,
+      ).length;
+    dialog(
+      `<strong>${count ? "Replace existing Pouch block" : "Preview instructions"}</strong><p>Only the Pouch block is changed. Review your draft before sending.</p><pre>${esc(payload)}</pre><div class="cp-actions"><button class="cp-primary" data-action="apply">${count ? "Replace block" : "Insert into draft"}</button><button data-action="cancel">Back</button></div>`,
+    );
+    panel.querySelector('[data-action="apply"]').onclick = () => {
+      try {
+        writeBlock(payload);
+      } catch (e) {
+        error(e.message);
+      }
+    };
+  }
+  panel.addEventListener("input", (e) => {
+    if (e.target.matches(".cp-search")) {
+      search = e.target.value;
+      render();
+    }
+  });
+  panel.addEventListener("change", async (e) => {
+    try {
+      if (e.target.matches(".cp-scope")) render();
+      else if (e.target.matches(".cp-category")) {
+        filter = e.target.value;
+        render();
+      } else if (e.target.matches("[data-key][type=checkbox]")) {
+        await request("toggle", {
+          key: e.target.dataset.key,
+          checked: e.target.checked,
+        });
+      } else if (e.target.matches(".cp-preset") && e.target.value) {
+        const p = state.presets.find((p) => p.key === e.target.value);
+        await request("select", {
+          keys: p.ruleIds.map((id) => M.key(p.scope, id)),
+        });
+      }
     } catch (_) {}
-    return false;
-  }
-
-  function buildPayload(mode) {
-    const picked = rules.filter(r => selected.has(r.id));
-    if (!picked.length) return '';
-    const header = mode === 'reinforce' ? '[CONTEXT POUCH — constraint reminder]' : '[CONTEXT POUCH — constraints for this task]';
-    const tail = mode === 'reinforce' ? 'Continue the current task while respecting these constraints.' : 'Treat these as hard constraints for the current task.';
-    return '\n\n' + header + '\n' + picked.map(r => '- ' + r.text).join('\n') + '\n' + tail;
-  }
-
-  function inject(mode) {
-    const payload = buildPayload(mode);
-    if (!payload) return;
-    if (insertIntoComposer(payload)) {
-      showToast((mode === 'reinforce' ? 'Reinforced ' : 'Injected ') + selected.size + ' rule' + (selected.size===1?'':'s'));
-      panel.classList.remove('open');
-    } else {
-      navigator.clipboard?.writeText(payload).then(() => showToast('Composer unavailable — rules copied')).catch(() => showToast('Could not access Codex composer'));
-    }
-  }
-
-  function openEditor(id) {
-    editingId = id || null;
-    const r = id ? rules.find(x => x.id === id) : null;
-    panel.querySelector('.cp-modal-title').textContent = r ? 'Edit rule' : 'Add rule';
-    panel.querySelector('[data-cp-field="title"]').value = r?.title || '';
-    panel.querySelector('[data-cp-field="category"]').value = r?.category || '';
-    panel.querySelector('[data-cp-field="text"]').value = r?.text || '';
-    panel.querySelector('#context-pouch-modal').classList.add('open');
-    setTimeout(() => panel.querySelector('[data-cp-field="title"]').focus(), 30);
-  }
-  function closeEditor() { editingId = null; panel.querySelector('#context-pouch-modal').classList.remove('open'); }
-  function saveEditor() {
-    const title = panel.querySelector('[data-cp-field="title"]').value.trim();
-    const category = panel.querySelector('[data-cp-field="category"]').value.trim() || 'Other';
-    const text = panel.querySelector('[data-cp-field="text"]').value.trim();
-    if (!title || !text) { showToast('Title and rule text are required'); return; }
-    if (editingId) {
-      const idx = rules.findIndex(r => r.id === editingId);
-      if (idx >= 0) rules[idx] = {...rules[idx], title, category, text};
-    } else {
-      rules.push({id:uid(), title, category, text});
-    }
-    save(); closeEditor(); render();
-  }
-
-  button.addEventListener('click', (e) => { e.stopPropagation(); panel.classList.toggle('open'); render(); positionUI(); });
-  panel.querySelector('.cp-search').addEventListener('input', (e) => { search = e.target.value; render(); });
-  panel.addEventListener('click', (e) => {
-    const cat = e.target.closest('[data-cat]');
-    if (cat) { filter = cat.getAttribute('data-cat'); render(); return; }
-    const act = e.target.closest('[data-cp]');
-    if (!act) return;
-    const action = act.getAttribute('data-cp');
-    const row = act.closest('.cp-row');
-    const id = row?.getAttribute('data-id');
-    if (action === 'close') panel.classList.remove('open');
-    else if (action === 'add') openEditor(null);
-    else if (action === 'inject') inject('inject');
-    else if (action === 'reinforce') inject('reinforce');
-    else if (action === 'clear') { selected.clear(); saveSelected(); render(); }
-    else if (action === 'reset') {
-      if (confirm('Reset Context Pouch rules to the defaults?')) { rules = DEFAULT_RULES.map(r => ({...r})); selected.clear(); save(); saveSelected(); filter='All'; search=''; panel.querySelector('.cp-search').value=''; render(); }
-    }
-    else if (action === 'edit' && id) openEditor(id);
-    else if (action === 'delete' && id) {
-      const r = rules.find(x => x.id === id);
-      if (confirm('Delete “' + (r?.title || 'this rule') + '”?')) { rules = rules.filter(x => x.id !== id); selected.delete(id); save(); saveSelected(); render(); }
-    }
-    else if (action === 'cancel-edit') closeEditor();
-    else if (action === 'save-edit') saveEditor();
   });
-  panel.addEventListener('change', (e) => {
-    if (e.target.getAttribute('data-cp') !== 'toggle') return;
-    const id = e.target.closest('.cp-row')?.getAttribute('data-id');
-    if (!id) return;
-    e.target.checked ? selected.add(id) : selected.delete(id); saveSelected(); render();
+  panel.addEventListener("click", async (e) => {
+    const el = e.target.closest("[data-action]");
+    if (!el) return;
+    const action = el.dataset.action;
+    try {
+      if (action === "close") {
+        panel.classList.remove("open");
+        button.focus();
+      } else if (action === "cancel") closeDialog();
+      else if (action === "graph") await request("graph");
+      else if (!state || busy) return;
+      else if (action === "clear") await request("select", { keys: [] });
+      else if (action === "add") edit();
+      else if (action === "edit")
+        edit(state.rules.find((r) => r.key === el.dataset.key));
+      else if (action === "preview" || action === "reinforce")
+        preview(action === "reinforce" ? "reinforce" : "inject");
+      else if (action === "remove") {
+        dialog(
+          '<strong>Remove Pouch instructions?</strong><p>This removes Pouch’s marked blocks from the current draft.</p><div class="cp-actions"><button data-action="confirm-remove">Remove block</button><button data-action="cancel">Cancel</button></div>',
+        );
+      } else if (action === "confirm-remove") writeBlock("");
+      else if (action === "save") {
+        const field = (name) =>
+          panel.querySelector(`[name="${name}"]`).value.trim();
+        await request("saveRule", {
+          scope: editing?.scope || field("scope"),
+          rule: {
+            id: editing?.id,
+            title: field("title"),
+            category: field("category") || "Other",
+            text: field("text"),
+            related: editing?.related || [],
+          },
+        });
+        closeDialog();
+      } else if (action === "delete") {
+        dialog(
+          `<strong>Delete “${esc(editing.title)}”?</strong><p>It will also be removed from presets and related-rule links.</p><div class="cp-actions"><button data-action="confirm-delete">Delete rule</button><button data-action="cancel">Cancel</button></div>`,
+        );
+      } else if (action === "confirm-delete") {
+        await request("deleteRule", { scope: editing.scope, id: editing.id });
+        closeDialog();
+      } else if (action === "preset") {
+        if (new Set(picked().map((r) => r.scope)).size !== 1)
+          throw new Error(
+            "Select rules from one library to create a portable preset.",
+          );
+        dialog(
+          '<strong>Save selected rules as a preset</strong><label><span>Preset name</span><input name="preset-title" maxlength="100" placeholder="Small bug fix"></label><div class="cp-actions"><button class="cp-primary" data-action="save-preset">Save preset</button><button data-action="cancel">Cancel</button></div>',
+        );
+      } else if (action === "save-preset") {
+        const rules = picked();
+        await request("savePreset", {
+          scope: rules[0].scope,
+          title: panel.querySelector('[name="preset-title"]').value.trim(),
+          ruleIds: rules.map((r) => r.id),
+        });
+        closeDialog();
+      }
+    } catch (e) {
+      error(e.message);
+    }
   });
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { if (panel.querySelector('#context-pouch-modal').classList.contains('open')) closeEditor(); else panel.classList.remove('open'); } });
-
-  const mo = new MutationObserver(() => positionUI());
-  mo.observe(document.documentElement, {subtree:true, childList:true});
-  window.addEventListener('resize', positionUI);
-  setInterval(positionUI, 1000);
-  render(); positionUI();
+  button.addEventListener("click", () => {
+    panel.classList.toggle("open");
+    if (panel.classList.contains("open")) {
+      request("state").catch(() => {});
+      render();
+      position();
+      panel.querySelector(".cp-search").focus();
+    }
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && panel.classList.contains("open")) {
+      if (panel.querySelector(".cp-dialog.open")) closeDialog();
+      else {
+        panel.classList.remove("open");
+        button.focus();
+      }
+      e.stopPropagation();
+    }
+  });
+  let scheduled = false;
+  const schedule = () => {
+    if (!scheduled) {
+      scheduled = true;
+      requestAnimationFrame(() => {
+        scheduled = false;
+        position();
+      });
+    }
+  };
+  new MutationObserver(schedule).observe(document.body, {
+    childList: true,
+    subtree: true,
+  });
+  window.addEventListener("resize", schedule);
+  window.addEventListener("scroll", schedule, true);
+  setInterval(schedule, 1200);
+  const connect = setInterval(async () => {
+    if (!window.__contextPouchApi) return;
+    clearInterval(connect);
+    rpc = window.createPouchClient(
+      window.__contextPouchApi,
+      (next) => {
+        state = next;
+        render();
+      },
+      error,
+    );
+    try {
+      await request("state");
+      let legacy;
+      try {
+        legacy = JSON.parse(
+          localStorage.getItem("context-pouch.rules.v1") || "null",
+        );
+      } catch (_) {}
+      if (
+        Array.isArray(legacy) &&
+        !localStorage.getItem("context-pouch.migrated.v2")
+      ) {
+        let selected = [];
+        try {
+          selected = JSON.parse(
+            sessionStorage.getItem("context-pouch.selected.v1") || "[]",
+          );
+        } catch (_) {}
+        await request("migrate", { rules: legacy, selected });
+        localStorage.setItem("context-pouch.migrated.v2", "true");
+      }
+    } catch (e) {
+      error(e.message);
+    }
+  }, 100);
+  setTimeout(() => {
+    if (!rpc) {
+      clearInterval(connect);
+      error(
+        "Pouch bridge unavailable. Run “Context Pouch: Install / Repair Codex Button” and reload VS Code.",
+      );
+    }
+  }, 15000);
+  render();
+  position();
 })();

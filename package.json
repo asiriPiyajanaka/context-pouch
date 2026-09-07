@@ -1,24 +1,49 @@
 {
   "name": "context-pouch-codex",
   "displayName": "Context Pouch for Codex",
-  "description": "Inject selectable, reusable task constraints directly into the Codex composer.",
-  "version": "0.1.0",
+  "description": "Reusable Codex constraints with project libraries, presets, portable packs, and an interactive rule graph.",
+  "version": "0.2.0",
   "publisher": "asiri-local",
-  "engines": {"vscode": "^1.95.0"},
-  "categories": ["Other"],
-  "keywords": ["codex", "context", "rules", "prompt", "agent"],
+  "engines": {
+    "vscode": "^1.95.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "codex",
+    "context",
+    "rules",
+    "prompt",
+    "agent"
+  ],
   "activationEvents": [
     "onStartupFinished",
     "onCommand:contextPouch.install",
     "onCommand:contextPouch.restore",
-    "onCommand:contextPouch.status"
+    "onCommand:contextPouch.status",
+    "onCommand:contextPouch.bridge",
+    "onCommand:contextPouch.graph"
   ],
   "main": "./extension.js",
   "contributes": {
     "commands": [
-      {"command": "contextPouch.install", "title": "Context Pouch: Install / Repair Codex Button"},
-      {"command": "contextPouch.restore", "title": "Context Pouch: Restore Codex"},
-      {"command": "contextPouch.status", "title": "Context Pouch: Show Status"}
+      {
+        "command": "contextPouch.install",
+        "title": "Context Pouch: Install / Repair Codex Button"
+      },
+      {
+        "command": "contextPouch.restore",
+        "title": "Context Pouch: Restore Codex"
+      },
+      {
+        "command": "contextPouch.status",
+        "title": "Context Pouch: Show Status"
+      },
+      {
+        "command": "contextPouch.graph",
+        "title": "Context Pouch: Open Rule Graph"
+      }
     ],
     "configuration": {
       "title": "Context Pouch",
@@ -29,8 +54,19 @@
           "description": "Automatically re-apply Context Pouch after the Codex extension updates, once you have enabled it."
         }
       }
-    }
+    },
+    "keybindings": [
+      {
+        "command": "contextPouch.graph",
+        "key": "ctrl+alt+p",
+        "mac": "cmd+alt+p"
+      }
+    ]
   },
-  "scripts": {},
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "check": "node --check extension.js && node --check library.js && node --check patcher.js && node --check model.js && node --check runtime.js && node --check media/graph.js && node --check client.js && node --check host-bridge.js && node --check webview-bootstrap.js",
+    "package": "python3 scripts/package.py"
+  },
   "license": "MIT"
 }

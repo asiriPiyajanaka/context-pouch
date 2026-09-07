@@ -1,170 +1,263 @@
-'use strict';
-
-const vscode = require('vscode');
-const fs = require('fs');
-const path = require('path');
-
-const START = '/* CONTEXT_POUCH_START */';
-const END = '/* CONTEXT_POUCH_END */';
-const BACKUP_SUFFIX = '.context-pouch-backup';
-const ENABLED_KEY = 'contextPouch.enabled';
-const LAST_TARGET_KEY = 'contextPouch.lastTarget';
-
-function runtimeSource() {
-  const runtimePath = path.join(__dirname, 'runtime.js');
-  const runtime = fs.readFileSync(runtimePath, 'utf8').trim();
-  return `\n${START}\n${runtime}\n${END}\n`;
-}
-
-function getCodexExtension() {
-  return vscode.extensions.getExtension('openai.chatgpt');
-}
-
-function resolveTarget() {
-  const ext = getCodexExtension();
-  if (!ext) throw new Error('OpenAI Codex extension (openai.chatgpt) is not installed in this VS Code environment.');
-  const webviewDir = path.join(ext.extensionPath, 'webview');
-  const assetsDir = path.join(webviewDir, 'assets');
-  if (!fs.existsSync(assetsDir)) throw new Error(`Codex webview assets not found: ${assetsDir}`);
-
-  const indexHtml = path.join(webviewDir, 'index.html');
-  if (fs.existsSync(indexHtml)) {
-    const html = fs.readFileSync(indexHtml, 'utf8');
-    const matches = [...html.matchAll(/(?:\.\/)?assets\/(index-[^"'?#]+\.js)/g)];
-    for (const m of matches) {
-      const p = path.join(assetsDir, m[1]);
-      if (fs.existsSync(p)) return { target: p, ext };
-    }
-  }
-
-  const candidates = fs.readdirSync(assetsDir)
-    .filter(n => /^index-.*\.js$/.test(n) && !n.endsWith('.js.map'))
-    .map(n => path.join(assetsDir, n))
-    .sort((a,b) => fs.statSync(b).size - fs.statSync(a).size);
-  if (!candidates.length) throw new Error('Could not find Codex webview entry bundle (webview/assets/index-*.js).');
-  return { target: candidates[0], ext };
-}
-
-function isPatchedFile(file) {
-  try { return fs.readFileSync(file, 'utf8').includes(START); } catch (_) { return false; }
-}
-
-function stripExistingPatch(src) {
-  const start = src.indexOf(START);
-  const end = src.indexOf(END);
-  if (start === -1 || end === -1 || end < start) return src;
-  return src.slice(0, start).replace(/\n?$/, '\n') + src.slice(end + END.length).replace(/^\n?/, '');
-}
-
-function patchTarget(target) {
-  const backup = target + BACKUP_SUFFIX;
-  let live = fs.readFileSync(target, 'utf8');
-  if (live.includes(START)) return { changed: false, backup };
-
-  let pristine = live;
-  if (fs.existsSync(backup)) {
-    const backed = fs.readFileSync(backup, 'utf8');
-    if (!backed.includes(START)) pristine = backed;
-  } else {
-    fs.writeFileSync(backup, pristine, 'utf8');
-  }
-  pristine = stripExistingPatch(pristine);
-  fs.writeFileSync(target, pristine.replace(/\s*$/, '') + runtimeSource(), 'utf8');
-  return { changed: true, backup };
-}
-
-function restoreTarget(target) {
-  const backup = target + BACKUP_SUFFIX;
-  if (fs.existsSync(backup)) {
-    fs.copyFileSync(backup, target);
-    fs.unlinkSync(backup);
-    return true;
-  }
-  if (fs.existsSync(target)) {
-    const live = fs.readFileSync(target, 'utf8');
-    if (live.includes(START)) {
-      fs.writeFileSync(target, stripExistingPatch(live), 'utf8');
-      return true;
-    }
-  }
-  return false;
-}
-
+"use strict";
+const vscode = require("vscode");
+const fs = require("fs");
+const path = require("path");
+const crypto = require("crypto");
+const patcher = require("./patcher");
+const { Library } = require("./library");
+const ENABLED_KEY = "contextPouch.enabled";
+const targets = () =>
+  patcher.resolveTargets(vscode.extensions.getExtension("openai.chatgpt"));
 async function offerReload(message) {
-  const choice = await vscode.window.showInformationMessage(message, 'Reload Window', 'Later');
-  if (choice === 'Reload Window') await vscode.commands.executeCommand('workbench.action.reloadWindow');
+  if (
+    (await vscode.window.showInformationMessage(
+      message,
+      "Reload Window",
+      "Later",
+    )) === "Reload Window"
+  )
+    await vscode.commands.executeCommand("workbench.action.reloadWindow");
 }
-
 async function install(context, quiet = false) {
-  try {
-    const { target, ext } = resolveTarget();
-    const result = patchTarget(target);
-    await context.globalState.update(ENABLED_KEY, true);
-    await context.globalState.update(LAST_TARGET_KEY, target);
-    if (!quiet) {
-      await offerReload(result.changed
-        ? `Context Pouch installed into Codex ${ext.packageJSON.version || ''}. Reload VS Code to show the pouch button.`
-        : 'Context Pouch is already installed. Reload if the button is not visible.');
-    }
-    return true;
-  } catch (err) {
-    if (!quiet) vscode.window.showErrorMessage(`Context Pouch: ${err.message || err}`);
-    return false;
-  }
-}
-
-async function restore(context) {
-  let restored = false;
-  const paths = new Set();
-  const last = context.globalState.get(LAST_TARGET_KEY);
-  if (last) paths.add(last);
-  try { paths.add(resolveTarget().target); } catch (_) {}
-
-  for (const p of paths) {
-    try { restored = restoreTarget(p) || restored; } catch (_) {}
-  }
-  await context.globalState.update(ENABLED_KEY, false);
-  await context.globalState.update(LAST_TARGET_KEY, undefined);
-  if (restored) await offerReload('Context Pouch was removed from Codex. Reload VS Code to finish restoring the original UI.');
-  else vscode.window.showInformationMessage('Context Pouch: no active patch was found.');
-}
-
-async function showStatus(context) {
-  try {
-    const { target, ext } = resolveTarget();
-    const patched = isPatchedFile(target);
-    vscode.window.showInformationMessage(`Context Pouch: ${patched ? 'installed' : 'not installed'} · Codex ${ext.packageJSON.version || 'unknown'} · ${path.basename(target)}`);
-  } catch (err) {
-    vscode.window.showErrorMessage(`Context Pouch: ${err.message || err}`);
-  }
-}
-
-async function activate(context) {
-  context.subscriptions.push(
-    vscode.commands.registerCommand('contextPouch.install', () => install(context, false)),
-    vscode.commands.registerCommand('contextPouch.restore', () => restore(context)),
-    vscode.commands.registerCommand('contextPouch.status', () => showStatus(context))
+  const files = targets(),
+    changed = patcher.patchTargets(files);
+  await context.globalState.update(ENABLED_KEY, true);
+  await context.globalState.update(
+    "contextPouch.targets",
+    Object.values(files),
   );
-
-  const enabled = context.globalState.get(ENABLED_KEY, false);
-  const auto = vscode.workspace.getConfiguration('contextPouch').get('autoRepatch', true);
-  if (enabled && auto) {
+  if (changed || !quiet)
+    await offerReload(
+      changed
+        ? "Context Pouch installed. Reload VS Code to connect the composer and rule graph."
+        : "Context Pouch is up to date.",
+    );
+}
+async function restore(context) {
+  const files = new Set(context.globalState.get("contextPouch.targets", []));
+  const legacy = context.globalState.get("contextPouch.lastTarget");
+  if (legacy) files.add(legacy);
+  try {
+    Object.values(targets()).forEach((p) => files.add(p));
+  } catch (_) {}
+  let changed = false;
+  const errors = [];
+  for (const file of files) {
     try {
-      const { target } = resolveTarget();
-      if (!isPatchedFile(target)) {
-        const ok = await install(context, true);
-        if (ok) vscode.window.showInformationMessage('Context Pouch was re-applied after a Codex update. Reload VS Code if the pouch button is not visible.');
-      }
-    } catch (_) {}
-  } else if (!context.globalState.get('contextPouch.firstPromptShown', false)) {
-    await context.globalState.update('contextPouch.firstPromptShown', true);
-    const codex = getCodexExtension();
-    if (codex) {
-      const choice = await vscode.window.showInformationMessage('Context Pouch can add a selectable rules button directly inside the Codex composer.', 'Install into Codex', 'Later');
-      if (choice === 'Install into Codex') await install(context, false);
+      changed = patcher.restoreTarget(file) || changed;
+    } catch (e) {
+      errors.push(e.message);
     }
   }
+  if (errors.length) throw new Error(errors.join("\n"));
+  await context.globalState.update(ENABLED_KEY, false);
+  await context.globalState.update("contextPouch.targets", undefined);
+  await context.globalState.update("contextPouch.lastTarget", undefined);
+  if (changed)
+    await offerReload(
+      "Context Pouch patches restored. Your rule library is kept. Reload VS Code.",
+    );
+  else
+    vscode.window.showInformationMessage(
+      "Context Pouch: no active patch found.",
+    );
 }
-
-function deactivate() {}
-module.exports = { activate, deactivate, _test: { runtimeSource, stripExistingPatch, patchTarget, restoreTarget } };
+function graphHtml(webview, extensionUri) {
+  const nonce = crypto.randomBytes(18).toString("base64");
+  const resource = (file) =>
+    webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, file));
+  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src 'nonce-${nonce}'; img-src ${webview.cspSource} data:;"><link rel="stylesheet" href="${resource("media/graph.css")}"><title>Pouch · Rule graph</title></head><body><div id="app"></div><script nonce="${nonce}" src="${resource("model.js")}"></script><script nonce="${nonce}" src="${resource("client.js")}"></script><script nonce="${nonce}" src="${resource("media/graph.js")}"></script></body></html>`;
+}
+function activate(context) {
+  const clients = new Set();
+  let graph;
+  const broadcast = (state) => {
+    for (const view of clients)
+      view
+        .postMessage({ channel: "context-pouch", event: "state", state })
+        .then(
+          (ok) => {
+            if (!ok) clients.delete(view);
+          },
+          () => clients.delete(view),
+        );
+  };
+  const library = new Library(context, broadcast);
+  const report =
+    (fn) =>
+    async (...args) => {
+      try {
+        return await fn(...args);
+      } catch (e) {
+        vscode.window.showErrorMessage(`Context Pouch: ${e.message}`);
+      }
+    };
+  function openGraph() {
+    if (graph) {
+      graph.reveal(vscode.ViewColumn.Active);
+      return;
+    }
+    graph = vscode.window.createWebviewPanel(
+      "contextPouch.graph",
+      "Pouch · Rule graph",
+      vscode.ViewColumn.Active,
+      {
+        enableScripts: true,
+        retainContextWhenHidden: true,
+        localResourceRoots: [context.extensionUri],
+      },
+    );
+    const panel = graph;
+    panel.iconPath = vscode.Uri.joinPath(
+      context.extensionUri,
+      "media/pouch.svg",
+    );
+    panel.webview.html = graphHtml(panel.webview, context.extensionUri);
+    panel.webview.onDidReceiveMessage(
+      async (message) => {
+        if (
+          message?.channel !== "context-pouch" ||
+          typeof message.id !== "string"
+        )
+          return;
+        try {
+          const result = await handle(message, panel.webview);
+          await panel.webview.postMessage({
+            channel: "context-pouch",
+            id: message.id,
+            result,
+          });
+        } catch (e) {
+          await panel.webview.postMessage({
+            channel: "context-pouch",
+            id: message.id,
+            error: e.message,
+          });
+        }
+      },
+      undefined,
+      context.subscriptions,
+    );
+    panel.onDidDispose(() => {
+      clients.delete(panel.webview);
+      graph = undefined;
+    });
+  }
+  async function handle(message, webview) {
+    if (!webview || typeof webview.postMessage !== "function")
+      throw new Error("Invalid Pouch connection.");
+    clients.add(webview);
+    if (JSON.stringify(message).length > 2 * 1024 * 1024)
+      throw new Error("Pouch request is too large.");
+    const { action, data = {} } = message;
+    if (action === "graph") {
+      openGraph();
+      return null;
+    }
+    if (action === "import") {
+      await library.importPack(data.scope);
+      return library.dispatch("state");
+    }
+    if (action === "export") {
+      await library.exportPack(data.scope, data.selectedOnly === true);
+      return null;
+    }
+    return library.dispatch(action, data);
+  }
+  context.subscriptions.push(
+    vscode.commands.registerCommand("contextPouch.bridge", handle),
+    vscode.commands.registerCommand("contextPouch.disconnect", (webview) =>
+      clients.delete(webview),
+    ),
+    vscode.commands.registerCommand("contextPouch.graph", openGraph),
+    vscode.commands.registerCommand(
+      "contextPouch.install",
+      report(() => install(context)),
+    ),
+    vscode.commands.registerCommand(
+      "contextPouch.restore",
+      report(() => restore(context)),
+    ),
+    vscode.commands.registerCommand(
+      "contextPouch.status",
+      report(() =>
+        vscode.window.showInformationMessage(
+          `Context Pouch: ${patcher.current(targets()) ? "up to date" : "install / repair needed"} · shared library + composer + graph`,
+        ),
+      ),
+    ),
+    {
+      dispose() {
+        graph?.dispose();
+        clients.clear();
+      },
+    },
+  );
+  let refreshTimer;
+  const refresh = () => {
+    clearTimeout(refreshTimer);
+    refreshTimer = setTimeout(
+      () =>
+        library.dispatch("state").then(broadcast, (e) => {
+          for (const v of clients)
+            v.postMessage({
+              channel: "context-pouch",
+              event: "error",
+              error: e.message,
+            });
+        }),
+      150,
+    );
+  };
+  const watcher = vscode.workspace.createFileSystemWatcher(
+    "**/.context-pouch/rules.json",
+  );
+  const personalWatcher = vscode.workspace.createFileSystemWatcher(
+    new vscode.RelativePattern(context.globalStorageUri, "rules.json"),
+  );
+  for (const w of [watcher, personalWatcher]) {
+    context.subscriptions.push(
+      w,
+      w.onDidChange(refresh),
+      w.onDidCreate(refresh),
+      w.onDidDelete(refresh),
+    );
+  }
+  context.subscriptions.push(
+    vscode.workspace.onDidChangeWorkspaceFolders(refresh),
+    vscode.workspace.onDidGrantWorkspaceTrust(refresh),
+    {
+      dispose() {
+        clearTimeout(refreshTimer);
+      },
+    },
+  );
+  const enabled = context.globalState.get(ENABLED_KEY, false);
+  if (
+    enabled &&
+    vscode.workspace.getConfiguration("contextPouch").get("autoRepatch", true)
+  ) {
+    report(async () => {
+      if (!patcher.current(targets())) await install(context, true);
+    })();
+  } else if (
+    !context.globalState.get("contextPouch.firstPromptShown", false) &&
+    vscode.extensions.getExtension("openai.chatgpt")
+  ) {
+    context.globalState.update("contextPouch.firstPromptShown", true);
+    vscode.window
+      .showInformationMessage(
+        "Context Pouch adds reusable rules beside the Codex composer and a connected rule graph.",
+        "Install into Codex",
+        "Later",
+      )
+      .then((choice) => {
+        if (choice === "Install into Codex") report(() => install(context))();
+      });
+  }
+}
+module.exports = {
+  activate,
+  deactivate() {},
+  _test: { ...patcher, graphHtml },
+};
