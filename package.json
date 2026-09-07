@@ -1,0 +1,36 @@
+{
+  "name": "context-pouch-codex",
+  "displayName": "Context Pouch for Codex",
+  "description": "Inject selectable, reusable task constraints directly into the Codex composer.",
+  "version": "0.1.0",
+  "publisher": "asiri-local",
+  "engines": {"vscode": "^1.95.0"},
+  "categories": ["Other"],
+  "keywords": ["codex", "context", "rules", "prompt", "agent"],
+  "activationEvents": [
+    "onStartupFinished",
+    "onCommand:contextPouch.install",
+    "onCommand:contextPouch.restore",
+    "onCommand:contextPouch.status"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {"command": "contextPouch.install", "title": "Context Pouch: Install / Repair Codex Button"},
+      {"command": "contextPouch.restore", "title": "Context Pouch: Restore Codex"},
+      {"command": "contextPouch.status", "title": "Context Pouch: Show Status"}
+    ],
+    "configuration": {
+      "title": "Context Pouch",
+      "properties": {
+        "contextPouch.autoRepatch": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically re-apply Context Pouch after the Codex extension updates, once you have enabled it."
+        }
+      }
+    }
+  },
+  "scripts": {},
+  "license": "MIT"
+}
