@@ -2,6 +2,8 @@
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
+const sessionPatch = require("./session-patch");
+const SESSION = "/* CONTEXT_POUCH_SESSION */";
 const START = "/* CONTEXT_POUCH_START */",
   END = "/* CONTEXT_POUCH_END */";
 const BOOT = "/* CONTEXT_POUCH_BOOT */",
@@ -26,7 +28,7 @@ function stripExistingPatch(src) {
   return strip(src, START, END);
 }
 function runtimeSource() {
-  return `\n${START}\n${read("model.js")}\n${read("client.js")}\n${read("runtime.js")}\n${END}\n`;
+  return `\n${START}\n${read("model.js")}\n${read("client.js")}\n${read("session-ui.js")}\n${read("runtime.js")}\n${END}\n`;
 }
 function resolveTargets(ext) {
   if (!ext)
@@ -59,12 +61,17 @@ function resolveTargets(ext) {
     throw new Error(
       "Cannot identify a unique Codex API acquisition chunk. This Codex build is unsupported.",
     );
-  return { webview: candidates[0], host, bridge: bridgeFiles[0] };
+  const sessions = fs.readdirSync(path.join(dir, "assets"))
+    .filter(name => name.endsWith(".js"))
+    .map(name => path.join(dir, "assets", name))
+    .filter(file => sessionPatch.inspect(fs.readFileSync(fs.existsSync(file + BACKUP) ? file + BACKUP : file, "utf8")));
+  return { webview: candidates[0], host, bridge: bridgeFiles[0],
+    ...(sessions.length === 1 ? { session: sessions[0] } : {}) };
 }
 function original(file) {
   const live = fs.readFileSync(file, "utf8");
   if (!fs.existsSync(file + BACKUP)) {
-    if ([START, HOST, BOOT].some((m) => live.includes(m)))
+    if ([START, HOST, BOOT, SESSION].some((m) => live.includes(m)))
       throw new Error(
         "A patched bundle is missing its backup. Restore Codex before installing.",
       );
@@ -121,6 +128,10 @@ function builds(targets) {
     );
   if (!bridge.next.includes("__contextPouchCapture(acquireVsCodeApi())"))
     throw new Error("Unsupported Codex API acquisition call.");
+  if (targets.session) {
+    const session = plan.get(targets.session);
+    session.next = sessionPatch.patch(session.next, `${SESSION}\n${read("session-bridge.js")}`);
+  }
   webview.next += runtimeSource();
   return [...plan.values()];
 }

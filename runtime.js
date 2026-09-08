@@ -362,6 +362,8 @@
   }
   const picked = () =>
     state.rules.filter((r) => state.selected.includes(r.key));
+  window.createPouchCorrectionUI({ panel, dialog, closeDialog, request,
+    getState: () => state, picked, esc, error });
   function dialog(html) {
     panel.querySelector(".cp-main").classList.add("cp-hidden");
     const d = panel.querySelector(".cp-dialog");

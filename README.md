@@ -40,6 +40,18 @@ Click **Pouch** beside the message composer. Simple mode shows the project selec
 
 Choose **Review selected rules** or **Reinforce selected** to preview instructions before insertion. Instructions append as plain text without tracking markers. Edit or delete them directly in the composer; inserting again adds another copy. Existing draft content and attachments are preserved. Folder scope is included in instruction text. Pouch adds instructions to the prompt; it does not enforce compliance or send the message automatically.
 
+### Correct a running session
+
+While Codex is working, select the relevant rules and choose **Correct running session**. Review the conversation shown, edit the correction (for example, “Replace the new button with our shared Button component”), choose when to apply it, then click **Send correction**:
+
+- **Apply now** sends instructions to the running turn. Codex can reconsider its work when it processes the input; this does not immediately stop an executing operation. Pouch pins steering to the reviewed turn and shows an acceptance receipt; it does not guarantee compliance.
+- **After this turn** queues one correction and starts a follow-up in the same conversation after that turn completes successfully. Use **Cancel queued correction** to remove it. Leaving the conversation, closing/reloading the view, a failed/interrupted turn, or a replacement turn cancels the queue. The queue lives in this view and is not saved across reloads.
+- **Stop and correct** requests interruption of the reviewed turn, waits for confirmation, then starts the correction in the same conversation. Already completed edits are not rolled back; the correction asks Codex to review and fix them.
+
+These actions send only the reviewed correction, preserving the composer draft and attachments. Unlike **Insert into draft**, **Send correction** directly submits instructions. Delivery errors are shown in Pouch and are not automatically retried; check the conversation before retrying if the connection was lost. The most recently submitted correction remains editable when reopening the dialog for the same project revision and conversation.
+
+Session controls use an experimental adapter for recognized Codex manager bundles. The adapter was checked against Codex `26.901.22334`; unsupported or ambiguous bundles retain draft insertion. Run **Install / Repair Codex Button** and reload after updating Pouch. Automated delivery and patch/restore tests do not replace an installed VS Code smoke test.
+
 ## Storage and migration
 
 Pouch 0.3.0 requires **VS Code 1.101 or newer** and uses built-in Node SQLite. There are no third-party runtime dependencies.
@@ -91,7 +103,7 @@ Generation is cancellable and times out after three minutes. Cancelling or provi
 
 ## Install and test
 
-Run `npm run package`, then use **Extensions → … → Install from VSIX…** with `dist/context-pouch-codex-0.3.2.vsix`. Run **Context Pouch: Install / Repair Codex Button** and reload VS Code after updating. Automatic repair detects changes in Pouch and Codex once enabled.
+Run `npm run package`, then use **Extensions → … → Install from VSIX…** with `dist/context-pouch-codex-0.3.3.vsix`. Run **Context Pouch: Install / Repair Codex Button** and reload VS Code after updating. Automatic repair detects changes in Pouch and Codex once enabled.
 
 **Context Pouch: Restore Codex** restores the original bundles and keeps your libraries. Restore before uninstalling Pouch, then reload.
 
