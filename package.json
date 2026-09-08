@@ -1,11 +1,11 @@
 {
   "name": "context-pouch-codex",
   "displayName": "Context Pouch for Codex",
-  "description": "Reusable Codex constraints with project libraries, presets, portable packs, and an interactive rule graph.",
-  "version": "0.2.6",
+  "description": "Project-first Codex rule libraries with global rules, defaults, overrides, and focused relationships.",
+  "version": "0.3.0",
   "publisher": "asiri-local",
   "engines": {
-    "vscode": "^1.95.0"
+    "vscode": "^1.101.0"
   },
   "categories": [
     "Other"
@@ -42,7 +42,7 @@
       },
       {
         "command": "contextPouch.graph",
-        "title": "Context Pouch: Open Rule Graph"
+        "title": "Context Pouch: Open Rule Library"
       },
       {
         "command": "contextPouch.generate",
@@ -79,7 +79,7 @@
   },
   "scripts": {
     "test": "node --test test/*.test.js",
-    "check": "node --check extension.js && node --check library.js && node --check patcher.js && node --check model.js && node --check runtime.js && node --check media/graph.js && node --check client.js && node --check host-bridge.js && node --check webview-bootstrap.js && node --check generator.js && node --check generation-ui.js",
+    "check": "node --check extension.js && node --check library.js && node --check patcher.js && node --check model.js && node --check runtime.js && node --check media/graph.js && node --check client.js && node --check host-bridge.js && node --check webview-bootstrap.js && node --check generator.js && node --check generation-ui.js && node --check sqlite-store.js && node --check rule-state.js && node --check pack-files.js && node --check media/library-view.js && node --check media/library-dialogs.js",
     "package": "python3 scripts/package.py"
   },
   "license": "MIT"

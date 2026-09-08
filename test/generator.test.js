@@ -55,6 +55,7 @@ async function wizard(t, choices, provider) {
   await fs.mkdir(path.join(root,"project/frontend"),{recursive:true});
   await fs.writeFile(path.join(root,"project/frontend/AGENTS.md"),docs[0].text);
   const {Library} = load("library.js",vscode), library = new Library(context,()=>{});
+  t.after(()=>library.dispose());
   context.secrets = {get:async()=>undefined};
   vscode.RelativePattern = class { constructor(uri,pattern){this.uri=uri;this.pattern=pattern;} };
   vscode.ProgressLocation = {Notification:15};

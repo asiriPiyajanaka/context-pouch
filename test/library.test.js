@@ -12,10 +12,12 @@ async function setup(t) {
   const env = environment(root);
   const { Library } = load("library.js", env.vscode);
   const updates = [];
+  const library = new Library(env.context, (s) => updates.push(s));
+  t.after(() => library.dispose());
   return {
     root,
     ...env,
-    library: new Library(env.context, (s) => updates.push(s)),
+    library,
     updates,
   };
 }
@@ -50,16 +52,13 @@ test("project CRUD, presets, relation cleanup, and durable selection share one s
   assert.deepEqual(state.selected, []);
   assert.deepEqual(state.presets[0].ruleIds, ["b"]);
   assert.deepEqual(state.rules.find((r) => r.id === "b").related, []);
-  const saved = JSON.parse(
-    await fs.readFile(
-      path.join(root, "project/.context-pouch/rules.json"),
-      "utf8",
-    ),
-  );
-  assert.equal(saved.rules.length, 1);
+  assert.equal(library.store.read(library.projectId).rules.length, 1);
+  const db = await fs.readFile(path.join(root, "personal/pouch.sqlite"));
+  assert.equal(db.subarray(0, 15).toString(), "SQLite format 3");
+  await assert.rejects(fs.stat(path.join(root,"project/.context-pouch/rules.json")), {code:"ENOENT"});
   assert(updates.length >= 5);
 });
-test("stale edits and invalid project files cannot overwrite data", async (t) => {
+test("stale edits are rejected and shared files cannot silently overwrite SQLite", async (t) => {
   const { library, root } = await setup(t);
   const first = await library.dispatch("state");
   await library.dispatch("saveRule", {
@@ -77,13 +76,10 @@ test("stale edits and invalid project files cannot overwrite data", async (t) =>
   const file = path.join(root, "project/.context-pouch/rules.json");
   await fs.mkdir(path.dirname(file), { recursive: true });
   await fs.writeFile(file, "{broken");
-  await assert.rejects(
-    library.dispatch("saveRule", {
-      scope: "project",
-      rule: { title: "No overwrite" },
-    }),
-    /Cannot load/,
-  );
+  await library.dispatch("saveRule", {
+    scope:"project", rule:{title:"Stored locally",text:"Keep local edits",category:"Code"},
+  });
+  assert.equal(library.store.read(library.projectId).rules.length,1);
   assert.equal(await fs.readFile(file, "utf8"), "{broken");
 });
 test("multi-root selection is isolated and project writes honor workspace trust", async (t) => {
@@ -167,7 +163,8 @@ test("migration preserves existing rules and import/export remaps duplicate refe
 
 test("simultaneous checkbox updates do not lose selections", async (t) => {
   const { library } = await setup(t);
-  const rules = (await library.dispatch("state")).rules.slice(0, 2);
+  for (const id of ["a","b"]) await library.dispatch("saveRule",{scope:"project",rule:{id,title:id,text:id,category:"Code"}});
+  const rules = (await library.dispatch("state")).rules;
   await Promise.all(
     rules.map((rule) =>
       library.dispatch("toggle", { key: rule.key, checked: true }),

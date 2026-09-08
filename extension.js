@@ -67,7 +67,7 @@ function graphHtml(webview, extensionUri) {
   const nonce = crypto.randomBytes(18).toString("base64");
   const resource = (file) =>
     webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, file));
-  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src 'nonce-${nonce}'; img-src ${webview.cspSource} data:;"><link rel="stylesheet" href="${resource("media/graph.css")}"><title>Pouch · Rule graph</title></head><body><div id="app"></div><script nonce="${nonce}" src="${resource("model.js")}"></script><script nonce="${nonce}" src="${resource("client.js")}"></script><script nonce="${nonce}" src="${resource("media/graph.js")}"></script></body></html>`;
+  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src 'nonce-${nonce}'; img-src ${webview.cspSource} data:;"><link rel="stylesheet" href="${resource("media/graph.css")}"><title>Pouch · Rule library</title></head><body><div id="app"></div><script nonce="${nonce}" src="${resource("model.js")}"></script><script nonce="${nonce}" src="${resource("client.js")}"></script><script nonce="${nonce}" src="${resource("media/library-view.js")}"></script><script nonce="${nonce}" src="${resource("media/library-dialogs.js")}"></script><script nonce="${nonce}" src="${resource("media/graph.js")}"></script></body></html>`;
 }
 function activate(context) {
   const clients = new Set();
@@ -85,7 +85,7 @@ function activate(context) {
   };
   const library = new Library(context, broadcast);
   const generation = new GenerationUI(context, library);
-  context.subscriptions.push(generation);
+  context.subscriptions.push(generation, library);
   const report =
     (fn) =>
     async (...args) => {
@@ -102,7 +102,7 @@ function activate(context) {
     }
     graph = vscode.window.createWebviewPanel(
       "contextPouch.graph",
-      "Pouch · Rule graph",
+      "Pouch · Rule library",
       vscode.ViewColumn.Active,
       {
         enableScripts: true,
@@ -170,11 +170,11 @@ function activate(context) {
       return null;
     }
     if (action === "import") {
-      await library.importPack(data.scope);
+      await library.importPack(data.scope, data.shared === true);
       return library.dispatch("state");
     }
     if (action === "export") {
-      await library.exportPack(data.scope, data.selectedOnly === true);
+      await library.exportPack(data.scope, data.selectedOnly === true, data.shared === true);
       return null;
     }
     return library.dispatch(action, data);
@@ -199,7 +199,7 @@ function activate(context) {
       "contextPouch.status",
       report(() =>
         vscode.window.showInformationMessage(
-          `Context Pouch: ${patcher.current(targets()) ? "up to date" : "install / repair needed"} · shared library + composer + graph`,
+          `Context Pouch: ${patcher.current(targets()) ? "up to date" : "install / repair needed"} · shared library + composer + library`,
         ),
       ),
     ),
@@ -227,19 +227,9 @@ function activate(context) {
     );
   };
   const watcher = vscode.workspace.createFileSystemWatcher(
-    "**/.context-pouch/rules.json",
+    new vscode.RelativePattern(context.globalStorageUri, "{pouch.sqlite,pouch.sqlite-wal}"),
   );
-  const personalWatcher = vscode.workspace.createFileSystemWatcher(
-    new vscode.RelativePattern(context.globalStorageUri, "rules.json"),
-  );
-  for (const w of [watcher, personalWatcher]) {
-    context.subscriptions.push(
-      w,
-      w.onDidChange(refresh),
-      w.onDidCreate(refresh),
-      w.onDidDelete(refresh),
-    );
-  }
+  context.subscriptions.push(watcher, watcher.onDidChange(refresh), watcher.onDidCreate(refresh));
   context.subscriptions.push(
     vscode.workspace.onDidChangeWorkspaceFolders(refresh),
     vscode.workspace.onDidGrantWorkspaceTrust(refresh),
@@ -264,7 +254,7 @@ function activate(context) {
     context.globalState.update("contextPouch.firstPromptShown", true);
     vscode.window
       .showInformationMessage(
-        "Context Pouch adds reusable rules beside the Codex composer and a connected rule graph.",
+        "Context Pouch adds reusable rules beside the Codex composer and a project rule library.",
         "Install into Codex",
         "Later",
       )

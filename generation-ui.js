@@ -93,7 +93,7 @@ class GenerationUI {
       if (!picks?.length) return;
       selected = picks.map(p => p.rule);
       const next = await vscode.window.showQuickPick([
-        { label: `Save ${selected.length} rules to ${project.name}`, id: "save", detail: "Adds these rules to .context-pouch/rules.json. Existing rules are kept." },
+        { label: `Save ${selected.length} rules to ${project.name}`, id: "save", detail: "Adds these rules to this project’s local library. Existing rules are kept." },
         { label: "Inspect / edit a suggestion", id: "edit" },
         { label: "Change selection", id: "back" },
       ], { title: "Review generated rules", ignoreFocusOut: true });

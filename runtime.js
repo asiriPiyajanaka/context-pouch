@@ -49,6 +49,7 @@
     #context-pouch-panel.advanced .cp-meta button{font-size:10px}
   `;
   document.documentElement.appendChild(style);
+  style.textContent += `.cp-library-label,.cp-globals summary{padding:9px;font-weight:600}.cp-globals summary{cursor:pointer}.cp-rule-state{display:block;font-size:10px;opacity:.7}.cp-meta{flex-wrap:wrap}`;
   const button = document.createElement("button");
   button.id = "context-pouch-button";
   button.title = "Context Pouch";
@@ -62,7 +63,7 @@
   panel.setAttribute("aria-modal", "false");
   button.setAttribute("aria-controls", panel.id);
   button.setAttribute("aria-expanded", "false");
-  panel.innerHTML = `<div class="cp-head"><strong>Pouch</strong><span class="cp-count"></span><button data-action="graph" title="Open rule graph in a new tab" aria-label="Open rule graph">Graph ↗</button><button data-action="close" aria-label="Close Pouch">×</button></div><div class="cp-mode" aria-label="Pouch mode"><button data-action="simple" aria-pressed="true">Simple</button><button data-action="advanced" aria-pressed="false">Advanced</button></div><div class="cp-error" role="status"></div><div class="cp-main"><div class="cp-tools"><input class="cp-search" aria-label="Search rules" placeholder="Find a rule…"><div class="cp-advanced"><select class="cp-scope" aria-label="Filter by library"><option value="all">All libraries</option></select><select class="cp-category" aria-label="Filter by category"><option value="all">All categories</option></select></div><div><select class="cp-preset" aria-label="Task preset"><option value="">Choose a preset…</option></select><button class="cp-advanced" data-action="preset">Save preset</button></div></div><div class="cp-list"></div><div class="cp-footer"><button class="cp-wide" data-action="generate">Generate rules from project</button><button class="cp-primary" data-action="preview">Review selected rules</button><button class="cp-advanced" data-action="reinforce">Reinforce selected</button><div class="cp-wide cp-meta cp-advanced"><button data-action="add">+ Rule</button><button data-action="clear">Clear selection</button></div></div></div><div class="cp-dialog"></div>`;
+  panel.innerHTML = `<div class="cp-head"><strong>Pouch</strong><span class="cp-count"></span><button data-action="graph" title="Open rule library in a new tab" aria-label="Open rule library">Library ↗</button><button data-action="close" aria-label="Close Pouch">×</button></div><div class="cp-mode" aria-label="Pouch mode"><button data-action="simple" aria-pressed="true">Simple</button><button data-action="advanced" aria-pressed="false">Advanced</button></div><div class="cp-error" role="status"></div><div class="cp-main"><div class="cp-tools"><select class="cp-project" aria-label="Active project"></select><input class="cp-search" aria-label="Search rules" placeholder="Find a rule…"><div class="cp-advanced"><select class="cp-scope" aria-label="Filter by library"><option value="all">All libraries</option></select><select class="cp-category" aria-label="Filter by category"><option value="all">All categories</option></select></div><div><select class="cp-preset" aria-label="Task preset"><option value="">Choose a preset…</option></select><button class="cp-advanced" data-action="preset">Save preset</button></div></div><div class="cp-list"></div><div class="cp-footer"><button class="cp-wide" data-action="generate">Generate rules from project</button><button class="cp-primary" data-action="preview">Review selected rules</button><button class="cp-advanced" data-action="reinforce">Reinforce selected</button><div class="cp-wide cp-meta cp-advanced"><button data-action="add">+ Rule</button><button data-action="clear">Clear selection</button><button data-action="save-defaults">Save defaults</button><button data-action="restore-defaults">Restore defaults</button></div></div></div><div class="cp-dialog"></div>`;
   let resizingAnimation;
   function setMode(next) {
     const before = panel.classList.contains("open")
@@ -293,6 +294,7 @@
     connector.style.display = "block";
   }
 
+  let globalOpen = false;
   function render() {
     if (!state) {
       for (const action of ["preview", "reinforce", "preset"])
@@ -301,6 +303,10 @@
         '<div class="cp-empty">Connecting to your library…</div>';
       return;
     }
+    const projectPicker = panel.querySelector(".cp-project");
+    projectPicker.innerHTML = state.projects.map(p=>`<option value="${esc(p.id)}">${esc(p.name)}</option>`).join("") || '<option value="">No project open</option>';
+    projectPicker.value = state.project;
+    projectPicker.disabled = state.projects.length < 2;
     const scope = panel.querySelector(".cp-scope");
     const oldScope = scope.value;
     scope.innerHTML =
@@ -329,7 +335,7 @@
       state.presets
         .map(
           (p) =>
-            `<option value="${esc(p.key)}">${esc(p.title)} · ${esc(p.scope)}</option>`,
+            `<option value="${esc(p.key)}">${esc(p.title)} · ${esc(p.scope === "personal" ? "Global" : "Project")}</option>`,
         )
         .join("");
     const q = search.toLowerCase();
@@ -339,14 +345,12 @@
         (filter === "all" || r.category === filter) &&
         `${r.title} ${r.text} ${r.category}`.toLowerCase().includes(q),
     );
-    panel.querySelector(".cp-list").innerHTML = shown.length
-      ? shown
-          .map(
-            (r) =>
-              `<div class="cp-row"><label title="${esc(r.text)}"><input type="checkbox" data-key="${esc(r.key)}" ${state.selected.includes(r.key) ? "checked" : ""}><span><strong>${esc(r.title)}</strong><small>${esc(r.text)}</small><small>${esc(r.scope)} · ${esc(r.category)}${r.appliesTo && r.appliesTo !== "." ? " · " + esc(r.appliesTo) + "/" : ""}</small></span></label><button class="cp-edit" data-action="edit" data-key="${esc(r.key)}" aria-label="Edit ${esc(r.title)}">✎</button></div>`,
-          )
-          .join("")
-      : '<div class="cp-empty">No matching rules. Add a rule or explore the graph.</div>';
+    const row = r => `<div class="cp-row"><label title="${esc(r.text)}"><input type="checkbox" data-key="${esc(r.key)}" ${state.wanted.includes(r.key) ? "checked" : ""} ${r.disabledHere || r.overriddenBy ? "disabled" : ""}><span><strong>${esc(r.title)}</strong><small>${esc(r.text)}</small><small>${esc(r.category)}${r.appliesTo && r.appliesTo !== "." ? " · " + esc(r.appliesTo) + "/" : ""}</small><span class="cp-rule-state">${r.isDefault ? "Default · " : ""}${r.disabledHere ? "Disabled here" : r.overriddenBy ? "Overridden here" : state.selected.includes(r.key) ? "Selected" : ""}</span></span></label><button class="cp-edit" data-action="edit" data-key="${esc(r.key)}" aria-label="Edit ${esc(r.title)}">✎</button></div>`;
+    const projectRules = shown.filter(r=>r.scope==="project");
+    const globalRules = shown.filter(r=>r.scope==="personal");
+    panel.querySelector(".cp-list").innerHTML = `<div class="cp-library-label">Project rules</div>${projectRules.map(row).join("") || '<div class="cp-empty">No matching project rules.</div>'}<details class="cp-globals" ${globalOpen ? "open" : ""}><summary>Global rules · ${state.rules.filter(r=>r.scope==="personal" && state.selected.includes(r.key)).length} active</summary>${globalRules.map(row).join("") || '<div class="cp-empty">No matching global rules.</div>'}</details>`;
+    panel.querySelector(".cp-globals").addEventListener("toggle", e=>{globalOpen=e.target.open;position();});
+    panel.querySelector('[data-action="save-defaults"]').disabled = !state.scopes.some(s=>s.id==="project" && s.writable);
     panel.querySelector(".cp-count").textContent =
       `${state.selected.length} selected`;
     for (const a of ["preview", "reinforce", "preset"])
@@ -406,12 +410,15 @@
     dismiss();
   }
   function preview(mode) {
-    const payload = M.payload(picked(), mode);
+    if (state.activeConflicts.length) throw new Error("Selected rules have confirmed conflicts. Open the library and deselect one side before inserting.");
+    const payload = M.payload(picked(), mode), previewRevision = state.revision;
     dialog(
       `<strong>Preview instructions</strong><p>These instructions will be added to the end of your draft. You can edit them before sending.</p><pre>${esc(payload)}</pre><div class="cp-actions"><button class="cp-primary" data-action="apply">Insert into draft</button><button data-action="cancel">Back</button></div>`,
     );
-    panel.querySelector('[data-action="apply"]').onclick = () => {
+    panel.querySelector('[data-action="apply"]').onclick = async () => {
       try {
+        await request("state");
+        if (state.revision !== previewRevision) throw new Error("Your project or rules changed. Review the selected instructions again.");
         insertInstructions(payload);
       } catch (e) {
         error(e.message);
@@ -426,7 +433,8 @@
   });
   panel.addEventListener("change", async (e) => {
     try {
-      if (e.target.matches(".cp-scope")) render();
+      if (e.target.matches(".cp-project")) { search="";filter="all";panel.querySelector(".cp-search").value="";await request("project",{id:e.target.value}); }
+      else if (e.target.matches(".cp-scope")) render();
       else if (e.target.matches(".cp-category")) {
         filter = e.target.value;
         render();
@@ -456,6 +464,8 @@
       else if (action === "graph") await request("graph");
       else if (!state || busy) return;
       else if (action === "generate") { dismiss(); await request("generate"); }
+      else if (action === "save-defaults") await request("saveDefaults");
+      else if (action === "restore-defaults") await request("restoreDefaults");
       else if (action === "clear") await request("select", { keys: [] });
       else if (action === "add") edit();
       else if (action === "edit")

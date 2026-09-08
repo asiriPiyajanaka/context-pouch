@@ -1,87 +1,98 @@
 # Context Pouch for Codex
 
-Reusable constraints beside the Codex composer, with a connected rule graph in a VS Code editor tab.
+A project-first rule library beside the Codex composer. Keep reusable global rules, project defaults, and explicit overrides, then insert the active instructions as ordinary editable text.
 
-## Use Pouch
+## Use the library
 
-- Click the **Pouch** button beside the composer. **Simple** mode shows search, presets, and rule titles; **Advanced** adds filters, details, editing, and reinforcement. Advanced expands to a larger workspace (up to 410 × 660 pixels) with animated expansion and collapse. Your mode choice is remembered.
-- Pouch opens in a nearby side margin when there is room, or 12px above/below its button in narrow webviews. It expands from the button with a short animation and keeps a subtle connection line visible. Reduced-motion preferences disable the animation. Click outside or press Escape to close it; unfinished rule edits remain available when reopened. Like other webview content, the popup cannot extend outside the Codex pane.
-- Choose **Review selected rules** or **Reinforce selected** to review the exact instructions before inserting them. Instructions are appended as plain text, without tracking markers. Edit or delete them directly in the composer; inserting again adds another copy.
-- Click **Graph ↗**, run **Context Pouch: Open Rule Graph**, or press **Cmd+Alt+P** (Windows/Linux: **Ctrl+Alt+P**) to open the graph in a new tab.
-- In the graph, click a rule to inspect or edit it. Drag nodes, pan the background, scroll to zoom, or use **Fit**. Categories and presets connect their member rules; related-rule links are editable. **Local graph** shows a rule's immediate connections. The sidebar provides keyboard-accessible rule navigation.
-- Checkboxes in the graph and composer share the same selection. Save a selection from one library as a named **task preset**, then apply it in either view.
-- Use **Import pack** and **Export** in the graph to exchange JSON packs. Import previews titles and duplicate counts, then lets you keep existing matches or replace them. Export a whole library or selected rules with their complete presets.
+Open **Library ↗** beside the composer, run **Context Pouch: Open Rule Library**, or press **Cmd+Alt+P** (Windows/Linux: **Ctrl+Alt+P**).
 
-New installations start with empty personal and project libraries: no predefined rules or presets. Existing saved libraries are preserved.
+- Choose the active project at the top. Projects are identified by folder URI, not display name; separate folders with identical names remain separate libraries. Moving a repository to a different path creates a new project identity; use a JSON export/import to transfer its rules.
+- Project rules appear first. **Global rules** are available in every project in a collapsed section beneath them. Existing Personal rules migrate to Global automatically.
+- Search and category filters narrow the list. Click a rule to read its instructions, sources, defaults, and relationships. Checkboxes select rules for the current task.
+- **Make default** marks a project rule as a default. **Make global default** makes a global rule part of the default set across projects. Global defaults can be disabled or overridden for a particular project.
+- **Save selection as defaults** remembers the current effective selection for this project. Global defaults omitted from that selection are disabled here. **Restore defaults** applies the saved defaults to the current task. Clearing a selection does not clear defaults. Project selections are remembered across switching and reopening.
+- For a global rule, **Disable for this project** excludes it here while leaving it available in other projects. Use **Enable for this project** to reverse that choice.
+- Save rules from one library as a named task preset. Applying a preset replaces the current task selection; it does not change defaults. Presets can be edited and deleted.
 
-## Generate project rules
+## Project priority and relationships
 
-Click **Generate rules from project** in the composer, **Generate rules** in the graph, or run **Context Pouch: Generate Rules from Project**. An empty project library also shows a generation prompt in the graph's welcome panel.
+Priority is explicit, not inferred from rule titles or list order. In a project rule's details, choose **Override a global rule**. When that project rule is selected, the global rule is excluded from the active instructions. Deselecting the project rule makes the global rule eligible again. Folder-specific overrides must have matching scope so a narrow project rule cannot suppress a broader global instruction.
 
-1. Choose Markdown documents from the active project. Agent instructions, README/CONTRIBUTING files, and docs are preselected; other `.md` and `.mdc` files are available. Dependency/build folders are excluded. Discovery lists up to 500 documents; individual files must be under 64 KB and the selection under 200 KB. Files resolving outside the project are rejected.
-2. Choose **Codex CLI** or **OpenAI API key**. Only selected document contents and existing project rule text/scope are included in the generation prompt. The provider choice is remembered.
-3. Review suggestions and source references, deselect unwanted rules, and use **Inspect / edit a suggestion** to change its title, category, or instructions or open a source document. Conflicts reported by the provider are shown before review. Save explicitly to add rules to `.context-pouch/rules.json`.
+The **Relationships** tab shows only connections involving the chosen rule, with direction and labels:
 
-**Codex CLI:** Install a current CLI and run `codex login` first. Generation requires `--ignore-user-config` support. Set `contextPouch.codexPath` to the executable's absolute path if VS Code cannot find it. Pouch runs an ephemeral, read-only extraction in a temporary directory with user config/rules ignored, shell tools disabled, and web search disabled; CLI authentication remains managed by Codex.
+- **Overrides:** a project rule supersedes a global rule in this project.
+- **Related to:** manually linked rules within the same library.
+- **Conflicts with · confirmed:** a conflict marked by the user for this project. If both rules are active, Pouch requires deselecting one before composer insertion. Removing an incorrect conflict is also possible in rule details.
 
-**OpenAI API:** Enter your own key and an available model ID supporting structured outputs. API usage is billed to your account. Keys stay in VS Code SecretStorage and are never passed to the webview or saved in project JSON. **Context Pouch: Set OpenAI API Key** replaces the key; submitting an empty value removes it. Pouch calls the Responses API with `store: false` and no tools.
+Categories and presets are not graph nodes. A searchable rule picker and regular buttons make relationship navigation keyboard accessible. Conflict detection is manual; Pouch does not infer that two instructions contradict each other.
 
-Generation can be cancelled from its progress notification and times out after three minutes. Cancelling or a provider failure leaves rules unchanged. Exact normalized duplicates within the same folder scope are skipped; existing rules are kept. Changes to the active project, library, or source documents during review require generating again.
+**Preview active instructions** shows the effective prompt: project rules first, with disabled and overridden globals excluded. Rule defaults, exclusions, overrides, and confirmed conflicts are local preferences; rule packs do not transfer them.
 
-Generated rules retain optional `sources` (`path`, `line`) and `appliesTo` fields through editing and pack import/export. Folder-specific scope is included in inserted prompts, and source references can be opened from project rule details. Source references identify where a suggestion came from; users should still review its interpretation.
+## Composer
 
-This first version generates rules, not presets, and supports local project folders in trusted workspaces. Claude integration and automatic document-change tracking are not included yet.
+Click **Pouch** beside the message composer. Simple mode shows the project selector, search, presets, and grouped rule titles. Advanced adds filters, full text, editing, default controls, and reinforcement. The mode is remembered. The popup adapts to the pane, honors reduced motion, and closes with Escape or an outside click.
 
-## Libraries
+Choose **Review selected rules** or **Reinforce selected** to preview instructions before insertion. Instructions append as plain text without tracking markers. Edit or delete them directly in the composer; inserting again adds another copy. Existing draft content and attachments are preserved. Folder scope is included in instruction text. Pouch adds instructions to the prompt; it does not enforce compliance or send the message automatically.
 
-Personal rules are stored in the extension's global storage as `rules.json`. Existing MVP rules migrate from the Codex webview on its first successful connection; their old browser storage is retained.
+## Storage and migration
 
-Project rules and presets live in `.context-pouch/rules.json` inside the repository. They can be committed and shared with teammates. In a multi-root workspace, use the graph's project selector. Project edits require a trusted workspace. Files changed outside Pouch are reloaded; stale edits are rejected instead of overwriting newer data.
+Pouch 0.3.0 requires **VS Code 1.101 or newer** and uses built-in Node SQLite. There are no third-party runtime dependencies.
 
-A pack uses this structure (related-rule and preset IDs refer to rules in the same library):
+The working database is `pouch.sqlite` in the extension's VS Code global storage directory. It contains separate project/global libraries, rules, presets, source metadata, and project preferences. SQLite transactions protect writes, and stale edits from another view or window are rejected. Selection, defaults, exclusions, and relationship preferences are isolated by project. API keys remain in VS Code SecretStorage.
+
+On first opening a library, Pouch copies its previous JSON data into SQLite:
+
+- Personal `rules.json` becomes the Global library.
+- A repository's `.context-pouch/rules.json` becomes that project's library.
+- Existing project selection is retained.
+
+Original files are left unchanged as migration backups. Invalid JSON blocks that library's migration with an actionable error; fix the file and retry. Once migrated, editing or deleting those JSON files does not modify the working database. New projects and Global libraries start with no predefined rules or presets. Project edits require a trusted workspace.
+
+## Sharing with JSON
+
+SQLite is the local source of truth. Use **Import pack** and **Export pack** for portable JSON. Import previews duplicate counts and lets you keep or replace matching rules. Export a whole library or selected rules and their complete presets.
+
+Under **Share project rules**, explicitly import or export `.context-pouch/rules.json` for Git sharing. Export asks before replacing the repository file. Only rules, source metadata, related links, and presets are shared; selections and project preferences remain local. No automatic two-way synchronization runs between SQLite and JSON.
+
+A minimal pack looks like:
 
 ```json
 {
   "version": 1,
   "rules": [
-    {
-      "id": "focused-changes",
-      "title": "Keep changes focused",
-      "category": "Code",
-      "text": "Only modify code needed for the requested behavior.",
-      "related": []
-    }
+    { "id": "focused", "title": "Keep changes focused", "category": "Code",
+      "text": "Only modify code needed for the requested behavior.", "related": [] }
   ],
   "presets": [
-    { "id": "bug-fix", "title": "Small bug fix", "ruleIds": ["focused-changes"] }
+    { "id": "bug-fix", "title": "Small bug fix", "ruleIds": ["focused"] }
   ]
 }
 ```
 
-## Install locally
+## Generate project rules
 
-Run `npm run package`, then use VS Code's **Extensions → … → Install from VSIX…** with the generated `dist/context-pouch-codex-0.2.6.vsix`.
+Click **Generate rules** or run **Context Pouch: Generate Rules from Project**.
 
-Run **Context Pouch: Install / Repair Codex Button**, then reload VS Code. Updating Pouch also requires repairing the patch and reloading; when enabled, automatic repair detects changes in both Pouch and Codex.
+1. Choose project `.md`/`.mdc` documents. Agent instructions, README/CONTRIBUTING files, and docs are preselected. Dependency/build folders are excluded. Discovery lists up to 500 files; each must be under 64 KB and the selection under 200 KB. Paths resolving outside the project are rejected.
+2. Choose **Codex CLI** or **OpenAI API key**. The prompt includes selected document contents and existing project rule text/scope. Provider choice is remembered.
+3. Review suggestions, open source references, edit instructions, and deselect unwanted rules. Reported source conflicts appear before review. Save explicitly to add rules to the active project's SQLite library; use Export afterward to share them.
 
-**Context Pouch: Restore Codex** restores the original bundles and keeps your rule library. Reload afterward. Restore before uninstalling Pouch.
+Codex requires a current CLI with `--ignore-user-config` support and a CLI login. Set `contextPouch.codexPath` if VS Code cannot find it. Extraction runs in an isolated temporary directory, read-only and ephemeral, with user config/rules ignored, shell tools disabled, and web search disabled.
+
+For OpenAI, enter your own API key and a model ID supporting structured outputs. API usage is billed to your account. **Context Pouch: Set OpenAI API Key** replaces the saved key; submitting a blank value removes it. Keys are never sent to webviews or stored in project files. Requests use the Responses API with `store: false` and no tools.
+
+Generation is cancellable and times out after three minutes. Cancelling or provider failure leaves rules unchanged. Exact normalized duplicates within the same folder scope are skipped. Changes to the project, library, or source documents during review require generating again. Generated rules keep source paths/line numbers and folder applicability through editing and import/export. Provider interpretations still need review. Claude integration and generated presets are not included.
+
+## Install and test
+
+Run `npm run package`, then use **Extensions → … → Install from VSIX…** with `dist/context-pouch-codex-0.3.0.vsix`. Run **Context Pouch: Install / Repair Codex Button** and reload VS Code after updating. Automatic repair detects changes in Pouch and Codex once enabled.
+
+**Context Pouch: Restore Codex** restores the original bundles and keeps your libraries. Restore before uninstalling Pouch, then reload.
+
+For generation testing in this repository, include `AGENTS.md`, `CONTRIBUTING.md`, `docs/architecture.md`, and `media/AGENTS.md`. Expected coverage includes a 300-line limit for new code files, immutable values, modular code, provider boundaries, and folder-scoped webview rules. Exact suggestion titles/counts vary by provider.
+
+Run `npm run check` and `npm test` for syntax, SQLite migration/persistence, project isolation, precedence, generation, rendering, and patch restoration checks. Run `npm run package` when shipped files change.
 
 ## Integration limits
 
-This remains an experimental patch of the Codex extension (`openai.chatgpt`). It patches the webview entry, the API-acquisition chunk (which may be part of the entry in some builds), and the extension host to route Pouch messages to its shared library. Each modified file has a pristine backup and integrity metadata. Unsupported bundle structures or unexpected external changes stop installation instead of being overwritten.
-
-The current target is local desktop VS Code. Remote extension-host combinations have not been verified. The graph and composer were checked in a browser harness; the patch was checked against copies of the installed Codex bundles. Full integration still needs verification after installation and reload in VS Code.
-
-Instructions are included in the prompt; Pouch does not enforce agent compliance. Draft editing relies on the current Codex contenteditable composer. Pouch appends instructions while preserving existing draft content and attachments.
-
-## Development
-
-No runtime dependencies. `npm run check` checks JavaScript syntax; `npm test` checks storage, import/export, plain-text instructions, and patch restoration.
-
-## Try generation in this repository
-
-Run **Generate rules from project** and include `AGENTS.md`, `CONTRIBUTING.md`, `docs/architecture.md`, and `media/AGENTS.md`. These provide real project guidance for testing extraction, duplicate handling, and folder scope. No generated rules are pre-saved.
-
-Expected coverage: a 300-line limit for new code files; `const` bindings and TypeScript `readonly` properties; focused modules and separated responsibilities; dependency injection for provider tests; accessible webview controls; and rendering workspace/model text safely. UI rules from `media/AGENTS.md` must apply only within `media/`. Exact titles and suggestion counts may vary by provider.
-
-Review the source links, edit a suggestion, deselect another, and save. Check that the graph and composer show the same rules, and that a scoped rule's prompt includes `Only within media/`. Generate again to check duplicate handling. Cancel a generation or review to verify it leaves the library unchanged.
+This remains an experimental patch of `openai.chatgpt` for local desktop VS Code. It patches the webview entry/API acquisition and extension host. Modified files have pristine backups and integrity checks; unsupported bundles or external changes stop installation. Remote extension-host configurations are not verified. Full UI and live provider integration should be checked after installation/reload in VS Code.
