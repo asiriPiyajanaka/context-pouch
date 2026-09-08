@@ -72,7 +72,7 @@ class Library {
       await Promise.all(
         this.scopes.map(async (s) => [
           s.id,
-          await this.read(s.uri, s.id === "personal" ? M.defaults : M.empty),
+          await this.read(s.uri, M.empty),
         ]),
       ),
     );

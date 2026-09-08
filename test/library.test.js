@@ -133,7 +133,7 @@ test("migration preserves existing rules and import/export remaps duplicate refe
   });
   assert.equal(
     (await library.dispatch("state")).rules.length,
-    M.defaults().rules.length + 2,
+    2,
   );
   const pack = {
     version: 1,
@@ -177,4 +177,12 @@ test("simultaneous checkbox updates do not lose selections", async (t) => {
     (await library.dispatch("state")).selected,
     rules.map((r) => r.key),
   );
+});
+
+test("fresh personal and project libraries contain no predefined rules or presets", async (t) => {
+  const { library } = await setup(t);
+  const state = await library.dispatch("state");
+  assert.deepEqual(state.rules, []);
+  assert.deepEqual(state.presets, []);
+  assert.deepEqual(state.selected, []);
 });

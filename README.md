@@ -12,6 +12,8 @@ Reusable constraints beside the Codex composer, with a connected rule graph in a
 - Checkboxes in the graph and composer share the same selection. Save a selection from one library as a named **task preset**, then apply it in either view.
 - Use **Import pack** and **Export** in the graph to exchange JSON packs. Import previews titles and duplicate counts, then lets you keep existing matches or replace them. Export a whole library or selected rules with their complete presets.
 
+New installations start with empty personal and project libraries: no predefined rules or presets. Existing saved libraries are preserved.
+
 ## Generate project rules
 
 Click **Generate rules from project** in the composer, **Generate rules** in the graph, or run **Context Pouch: Generate Rules from Project**. An empty project library also shows a generation prompt in the graph's welcome panel.
@@ -75,3 +77,11 @@ Instructions are included in the prompt; Pouch does not enforce agent compliance
 ## Development
 
 No runtime dependencies. `npm run check` checks JavaScript syntax; `npm test` checks storage, import/export, prompt blocks, and patch restoration.
+
+## Try generation in this repository
+
+Run **Generate rules from project** and include `AGENTS.md`, `CONTRIBUTING.md`, `docs/architecture.md`, and `media/AGENTS.md`. These provide real project guidance for testing extraction, duplicate handling, and folder scope. No generated rules are pre-saved.
+
+Expected coverage: a 300-line limit for new code files; `const` bindings and TypeScript `readonly` properties; focused modules and separated responsibilities; dependency injection for provider tests; accessible webview controls; and rendering workspace/model text safely. UI rules from `media/AGENTS.md` must apply only within `media/`. Exact titles and suggestion counts may vary by provider.
+
+Review the source links, edit a suggestion, deselect another, and save. Check that the graph and composer show the same rules, and that a scoped rule's prompt includes `Only within media/`. Generate again to check duplicate handling. Cancel a generation or review to verify it leaves the library unchanged.

@@ -5,67 +5,7 @@
 })(typeof globalThis !== "undefined" ? globalThis : this, function () {
   "use strict";
   const VERSION = 1;
-  const DEFAULT_RULES = [
-    [
-      "ui-existing-buttons",
-      "UI",
-      "Use existing app buttons",
-      "Use the existing app button components. Do not create replacement button implementations.",
-    ],
-    [
-      "ui-no-new-buttons",
-      "UI",
-      "Do not add new buttons",
-      "Do not add new buttons, CTAs, or controls unless they were explicitly requested.",
-    ],
-    [
-      "ui-reuse-components",
-      "UI",
-      "Reuse existing components",
-      "Reuse existing project components and patterns before creating new UI components.",
-    ],
-    [
-      "ui-preserve-layout",
-      "UI",
-      "Preserve current layout",
-      "Preserve the current layout and visual structure except for the changes explicitly requested.",
-    ],
-    [
-      "assets-generate",
-      "Assets",
-      "Generate/use icons when needed",
-      "When the design requires an icon or visual asset, use or generate an appropriate asset instead of replacing it with extra text or a new button.",
-    ],
-    [
-      "nav-no-change",
-      "Project",
-      "Do not change navigation",
-      "Do not change routes, navigation structure, or navigation behavior unless explicitly requested.",
-    ],
-    [
-      "code-no-deps",
-      "Code",
-      "No new dependencies",
-      "Do not add a new dependency unless the task cannot reasonably be completed with the existing stack.",
-    ],
-    [
-      "code-no-unrelated",
-      "Code",
-      "Do not refactor unrelated code",
-      "Do not refactor, rename, or modify unrelated code while completing this task.",
-    ],
-  ].map(([id, category, title, text]) => ({
-    id,
-    category,
-    title,
-    text,
-    related: [],
-  }));
   const empty = () => ({ version: VERSION, rules: [], presets: [] });
-  const defaults = () => ({
-    ...empty(),
-    rules: DEFAULT_RULES.map((r) => ({ ...r, related: [] })),
-  });
   function string(value, name, max, fallback) {
     if (value == null && fallback !== undefined) return fallback;
     if (typeof value !== "string" || !value.trim() || value.length > max)
@@ -231,7 +171,6 @@
   return {
     VERSION,
     empty,
-    defaults,
     validate,
     key,
     mergePack,
