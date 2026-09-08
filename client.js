@@ -27,7 +27,7 @@
               ),
             );
           },
-          ["import", "export"].includes(action) ? 600000 : 15000,
+          action === "generate" ? 3600000 : ["import", "export"].includes(action) ? 600000 : 15000,
         );
         pending.set(id, { resolve, reject, timer });
         try {

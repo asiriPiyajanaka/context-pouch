@@ -602,3 +602,25 @@ dialog label.field > span {
 .inspector-heading {
   padding: 0;
 }
+
+.generation-welcome {
+  padding-bottom: 16px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.generation-welcome button {
+  white-space: normal;
+  width: 100%;
+}
+@media (max-width: 650px) {
+  .topbar .subtitle, .topbar .slash {
+    display: none;
+  }
+  .topbar {
+    padding: 0 10px;
+  }
+  .top-actions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+}

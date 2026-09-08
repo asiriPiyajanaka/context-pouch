@@ -79,6 +79,21 @@
       throw new Error(`${name} must be a list of IDs.`);
     return [...new Set(value.map((v) => string(v, name, 150)))];
   }
+  function relativePath(value) {
+    const p = string(value, "Source path", 500);
+    if (p.startsWith("/") || p.includes("\\") || p.includes(":") || /[\x00-\x1f]|\[\/?CONTEXT POUCH/.test(p) || p.split("/").some((x) => !x || x === ".." || (x === "." && p !== ".")))
+      throw new Error("Expected a project-relative source path.");
+    return p;
+  }
+  function sources(value) {
+    if (!Array.isArray(value) || value.length > 20)
+      throw new Error("Sources must be a list of up to 20 references.");
+    return value.map((s) => {
+      if (!Number.isInteger(s?.line) || s.line < 1)
+        throw new Error("Invalid source line.");
+      return { path: relativePath(s.path), line: s.line };
+    });
+  }
   function validate(input) {
     if (
       !input ||
@@ -97,6 +112,8 @@
       category: string(r?.category, "Category", 50, "Other"),
       text: string(r?.text, "Rule text", 5000),
       related: ids(r?.related ?? [], "Related rules"),
+      ...(r?.sources !== undefined ? { sources: sources(r.sources) } : {}),
+      ...(r?.appliesTo ? { appliesTo: relativePath(r.appliesTo) } : {}),
     }));
     if (rules.some((r) => /\[\/?CONTEXT POUCH/.test(r.text)))
       throw new Error(
@@ -133,7 +150,7 @@
       duplicates = 0;
     for (const rule of incoming.rules) {
       const match = result.rules.find(
-        (r) => r.id === rule.id || canonical(r.text) === canonical(rule.text),
+        (r) => r.id === rule.id || (canonical(r.text) === canonical(rule.text) && (r.appliesTo || ".") === (rule.appliesTo || ".")),
       );
       if (match) {
         remap.set(rule.id, match.id);
@@ -189,7 +206,7 @@
   const END = "[/CONTEXT POUCH]";
   function payload(rules, mode = "inject") {
     if (!rules.length) return "";
-    return `${START}\n${mode === "reinforce" ? "Reminder for the current task:" : "Instructions for the current task:"}\n${rules.map((r) => "- " + r.text).join("\n")}\n${END}`;
+    return `${START}\n${mode === "reinforce" ? "Reminder for the current task:" : "Instructions for the current task:"}\n${rules.map((r) => "- " + (r.appliesTo && r.appliesTo !== "." ? `Only within ${r.appliesTo}/: ` : "") + r.text).join("\n")}\n${END}`;
   }
   function blocks(text) {
     const result = [];

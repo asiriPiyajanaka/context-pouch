@@ -43,6 +43,14 @@
       {
         "command": "contextPouch.graph",
         "title": "Context Pouch: Open Rule Graph"
+      },
+      {
+        "command": "contextPouch.generate",
+        "title": "Context Pouch: Generate Rules from Project"
+      },
+      {
+        "command": "contextPouch.setApiKey",
+        "title": "Context Pouch: Set OpenAI API Key"
       }
     ],
     "configuration": {
@@ -52,6 +60,12 @@
           "type": "boolean",
           "default": true,
           "description": "Automatically re-apply Context Pouch after the Codex extension updates, once you have enabled it."
+        },
+        "contextPouch.codexPath": {
+          "type": "string",
+          "default": "codex",
+          "scope": "machine",
+          "description": "Codex executable name or absolute path used for project rule generation. Requires a current CLI with --ignore-user-config support."
         }
       }
     },
@@ -65,7 +79,7 @@
   },
   "scripts": {
     "test": "node --test test/*.test.js",
-    "check": "node --check extension.js && node --check library.js && node --check patcher.js && node --check model.js && node --check runtime.js && node --check media/graph.js && node --check client.js && node --check host-bridge.js && node --check webview-bootstrap.js",
+    "check": "node --check extension.js && node --check library.js && node --check patcher.js && node --check model.js && node --check runtime.js && node --check media/graph.js && node --check client.js && node --check host-bridge.js && node --check webview-bootstrap.js && node --check generator.js && node --check generation-ui.js",
     "package": "python3 scripts/package.py"
   },
   "license": "MIT"

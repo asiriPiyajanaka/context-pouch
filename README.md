@@ -12,6 +12,24 @@ Reusable constraints beside the Codex composer, with a connected rule graph in a
 - Checkboxes in the graph and composer share the same selection. Save a selection from one library as a named **task preset**, then apply it in either view.
 - Use **Import pack** and **Export** in the graph to exchange JSON packs. Import previews titles and duplicate counts, then lets you keep existing matches or replace them. Export a whole library or selected rules with their complete presets.
 
+## Generate project rules
+
+Click **Generate rules from project** in the composer, **Generate rules** in the graph, or run **Context Pouch: Generate Rules from Project**. An empty project library also shows a generation prompt in the graph's welcome panel.
+
+1. Choose Markdown documents from the active project. Agent instructions, README/CONTRIBUTING files, and docs are preselected; other `.md` and `.mdc` files are available. Dependency/build folders are excluded. Discovery lists up to 500 documents; individual files must be under 64 KB and the selection under 200 KB. Files resolving outside the project are rejected.
+2. Choose **Codex CLI** or **OpenAI API key**. Only selected document contents and existing project rule text/scope are included in the generation prompt. The provider choice is remembered.
+3. Review suggestions and source references, deselect unwanted rules, and use **Inspect / edit a suggestion** to change its title, category, or instructions or open a source document. Conflicts reported by the provider are shown before review. Save explicitly to add rules to `.context-pouch/rules.json`.
+
+**Codex CLI:** Install a current CLI and run `codex login` first. Generation requires `--ignore-user-config` support. Set `contextPouch.codexPath` to the executable's absolute path if VS Code cannot find it. Pouch runs an ephemeral, read-only extraction in a temporary directory with user config/rules ignored, shell tools disabled, and web search disabled; CLI authentication remains managed by Codex.
+
+**OpenAI API:** Enter your own key and an available model ID supporting structured outputs. API usage is billed to your account. Keys stay in VS Code SecretStorage and are never passed to the webview or saved in project JSON. **Context Pouch: Set OpenAI API Key** replaces the key; submitting an empty value removes it. Pouch calls the Responses API with `store: false` and no tools.
+
+Generation can be cancelled from its progress notification and times out after three minutes. Cancelling or a provider failure leaves rules unchanged. Exact normalized duplicates within the same folder scope are skipped; existing rules are kept. Changes to the active project, library, or source documents during review require generating again.
+
+Generated rules retain optional `sources` (`path`, `line`) and `appliesTo` fields through editing and pack import/export. Folder-specific scope is included in inserted prompts, and source references can be opened from project rule details. Source references identify where a suggestion came from; users should still review its interpretation.
+
+This first version generates rules, not presets, and supports local project folders in trusted workspaces. Claude integration and automatic document-change tracking are not included yet.
+
 ## Libraries
 
 Personal rules are stored in the extension's global storage as `rules.json`. Existing MVP rules migrate from the Codex webview on its first successful connection; their old browser storage is retained.

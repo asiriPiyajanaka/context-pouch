@@ -5,6 +5,7 @@ const path = require("path");
 const crypto = require("crypto");
 const patcher = require("./patcher");
 const { Library } = require("./library");
+const { GenerationUI } = require("./generation-ui");
 const ENABLED_KEY = "contextPouch.enabled";
 const targets = () =>
   patcher.resolveTargets(vscode.extensions.getExtension("openai.chatgpt"));
@@ -83,6 +84,8 @@ function activate(context) {
         );
   };
   const library = new Library(context, broadcast);
+  const generation = new GenerationUI(context, library);
+  context.subscriptions.push(generation);
   const report =
     (fn) =>
     async (...args) => {
@@ -150,6 +153,18 @@ function activate(context) {
     if (JSON.stringify(message).length > 2 * 1024 * 1024)
       throw new Error("Pouch request is too large.");
     const { action, data = {} } = message;
+    if (action === "generate") {
+      await report(() => generation.run())();
+      return library.dispatch("state");
+    }
+    if (action === "openSource") {
+      const state = await library.dispatch("state");
+      const rule = state.rules.find(r => r.key === data.key && r.scope === "project");
+      const source = rule?.sources?.[data.index];
+      if (!source) throw new Error("Source reference is no longer available.");
+      await generation.openSource(source);
+      return null;
+    }
     if (action === "graph") {
       openGraph();
       return null;
@@ -170,6 +185,8 @@ function activate(context) {
       clients.delete(webview),
     ),
     vscode.commands.registerCommand("contextPouch.graph", openGraph),
+    vscode.commands.registerCommand("contextPouch.generate", report(() => generation.run())),
+    vscode.commands.registerCommand("contextPouch.setApiKey", report(() => generation.setKey())),
     vscode.commands.registerCommand(
       "contextPouch.install",
       report(() => install(context)),

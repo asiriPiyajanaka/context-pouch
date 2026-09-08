@@ -193,8 +193,10 @@ class Library {
           );
         }
       } else {
-        const scope = this.scope(data.scope),
-          pack = structuredClone(this.packs[scope.id]);
+        const scope = this.scope(data.scope);
+        let pack = structuredClone(this.packs[scope.id]);
+        if (action === "saveGenerated" && data.project !== this.projectId)
+          throw new Error("Active project changed. Generate again for the current project.");
         if (action === "saveRule") {
           const rule = {
             id: data.rule?.id || crypto.randomUUID(),
@@ -204,8 +206,14 @@ class Library {
             related: data.rule?.related || [],
           };
           const i = pack.rules.findIndex((r) => r.id === rule.id);
+          if (i >= 0) {
+            if (pack.rules[i].sources) rule.sources = pack.rules[i].sources;
+            if (pack.rules[i].appliesTo) rule.appliesTo = pack.rules[i].appliesTo;
+          }
           if (i < 0) pack.rules.push(rule);
           else pack.rules[i] = rule;
+        } else if (action === "saveGenerated") {
+          pack = M.mergePack(pack, { version: 1, rules: data.rules, presets: [] }).pack;
         } else if (action === "deleteRule") {
           pack.rules = pack.rules
             .filter((r) => r.id !== data.id)

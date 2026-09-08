@@ -15,7 +15,7 @@
         })[c],
     );
   const app = document.querySelector("#app");
-  app.innerHTML = `<div class="app"><header class="topbar"><div class="brand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 7h8l1.2 3.2c.8 2.1 1.3 4.2 1.3 6.5A2.3 2.3 0 0 1 16.2 19H7.8a2.3 2.3 0 0 1-2.3-2.3c0-2.3.5-4.4 1.3-6.5L8 7Z"/><path d="M9 7c0-1.8 1.2-3 3-3s3 1.2 3 3M9 12h6"/></svg>Pouch<span class="slash">/</span></div><span class="subtitle">Rule graph</span><div class="top-actions"><button data-action="import">Import pack</button><button data-action="export">Export</button><button class="primary" data-action="new">+ New rule</button></div></header><main class="workspace"><aside class="sidebar"><div class="side-top"><div class="eyebrow">Your library</div><select id="project" aria-label="Active project"></select><input id="search" type="search" placeholder="Search your rules…" aria-label="Search rules"><div class="scope-tabs"><button data-scope="all" class="active">All</button><button data-scope="personal">Personal</button><button data-scope="project">Project</button></div></div><div class="section-label"><span class="eyebrow">Rules</span><span id="rule-count" class="count"></span></div><div class="rule-list" aria-label="Rules"></div><section class="presets"><div class="section-label"><span class="eyebrow">Task presets</span><button class="subtle" data-action="new-preset" aria-label="Save selection as preset">+</button></div><div id="preset-list"></div></section></aside><section class="graph-area" aria-label="Interactive rule graph"><div class="graph-tools"><select id="category" aria-label="Category filter"><option value="all">All categories</option></select><button data-action="neighbors" title="Show only the focused rule and its immediate connections">Local graph</button><label><input type="checkbox" id="show-categories" checked>Categories</label><label><input type="checkbox" id="show-presets" checked>Presets</label></div><canvas tabindex="0" aria-label="Rule graph. Drag to pan, scroll to zoom. Use the rule list to navigate by keyboard."></canvas><div class="graph-empty hidden">No matching rules. Clear your filters or add a rule.</div><div class="graph-caption"><strong>Small rules. Connected thinking.</strong>Drag nodes to arrange · Scroll to zoom</div><div class="zoom"><button data-action="zoom-out" aria-label="Zoom out">−</button><output id="zoom-level">100%</output><button data-action="zoom-in" aria-label="Zoom in">+</button><button data-action="fit" aria-label="Fit graph">Fit</button></div></section><aside class="inspector welcome" aria-label="Rule details"></aside></main><footer class="statusbar"><span class="status-dot">●</span><span id="summary">Connecting to your library…</span><button class="subtle" data-action="clear">Clear selection</button><span class="message" role="status"></span></footer></div><dialog id="editor-dialog"></dialog>`;
+  app.innerHTML = `<div class="app"><header class="topbar"><div class="brand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 7h8l1.2 3.2c.8 2.1 1.3 4.2 1.3 6.5A2.3 2.3 0 0 1 16.2 19H7.8a2.3 2.3 0 0 1-2.3-2.3c0-2.3.5-4.4 1.3-6.5L8 7Z"/><path d="M9 7c0-1.8 1.2-3 3-3s3 1.2 3 3M9 12h6"/></svg>Pouch<span class="slash">/</span></div><span class="subtitle">Rule graph</span><div class="top-actions"><button data-action="generate">Generate rules</button><button data-action="import">Import pack</button><button data-action="export">Export</button><button class="primary" data-action="new">+ New rule</button></div></header><main class="workspace"><aside class="sidebar"><div class="side-top"><div class="eyebrow">Your library</div><select id="project" aria-label="Active project"></select><input id="search" type="search" placeholder="Search your rules…" aria-label="Search rules"><div class="scope-tabs"><button data-scope="all" class="active">All</button><button data-scope="personal">Personal</button><button data-scope="project">Project</button></div></div><div class="section-label"><span class="eyebrow">Rules</span><span id="rule-count" class="count"></span></div><div class="rule-list" aria-label="Rules"></div><section class="presets"><div class="section-label"><span class="eyebrow">Task presets</span><button class="subtle" data-action="new-preset" aria-label="Save selection as preset">+</button></div><div id="preset-list"></div></section></aside><section class="graph-area" aria-label="Interactive rule graph"><div class="graph-tools"><select id="category" aria-label="Category filter"><option value="all">All categories</option></select><button data-action="neighbors" title="Show only the focused rule and its immediate connections">Local graph</button><label><input type="checkbox" id="show-categories" checked>Categories</label><label><input type="checkbox" id="show-presets" checked>Presets</label></div><canvas tabindex="0" aria-label="Rule graph. Drag to pan, scroll to zoom. Use the rule list to navigate by keyboard."></canvas><div class="graph-empty hidden">No matching rules. Clear your filters or add a rule.</div><div class="graph-caption"><strong>Small rules. Connected thinking.</strong>Drag nodes to arrange · Scroll to zoom</div><div class="zoom"><button data-action="zoom-out" aria-label="Zoom out">−</button><output id="zoom-level">100%</output><button data-action="zoom-in" aria-label="Zoom in">+</button><button data-action="fit" aria-label="Fit graph">Fit</button></div></section><aside class="inspector welcome" aria-label="Rule details"></aside></main><footer class="statusbar"><span class="status-dot">●</span><span id="summary">Connecting to your library…</span><button class="subtle" data-action="clear">Clear selection</button><span class="message" role="status"></span></footer></div><dialog id="editor-dialog"></dialog>`;
   let state,
     scope = "all",
     query = "",
@@ -125,6 +125,7 @@
       `${state.rules.length} rules · ${state.presets.length} presets · ${state.selected.length} selected`;
     app.querySelector('[data-action="new-preset"]').disabled =
       !state.selected.length;
+    app.querySelector('[data-action="generate"]').disabled = !state.scopes.some(s => s.id === "project" && s.writable);
     renderInspector();
     buildGraph();
   }
@@ -134,6 +135,9 @@
     el.classList.toggle("welcome", !rule);
     if (!rule) {
       el.innerHTML = `<div class="eyebrow">A map of your constraints</div><div class="welcome-art">⌘</div><h1>Give your rules<br>some context.</h1><p class="hint">Explore how your rules fit together. Choose a node to read, edit, or include it in your next prompt.</p><div class="stats"><div class="stat"><strong>${state?.rules.length || 0}</strong><span>reusable rules</span></div><div class="stat"><strong>${state?.selected.length || 0}</strong><span>selected for your task</span></div></div><div class="legend"><span>Rule</span><span>Category</span><span>Preset</span></div><p class="hint">Lines connect rules to categories and presets. Add related-rule links to describe connections of your own.</p><p class="hint">Your selection is shared with the Pouch button beside the Codex composer.</p>`;
+      if (state?.project && !state.rules.some(r => r.scope === "project")) {
+        el.insertAdjacentHTML("afterbegin", '<div class="generation-welcome"><h2>Build your project library</h2><p class="hint">Turn project docs and agent instructions into reusable rules.</p><button class="primary" data-action="generate">Generate rules from project</button></div>');
+      }
       return;
     }
     const linked = state.rules.filter(
@@ -145,7 +149,10 @@
       (p) => p.scope === rule.scope && p.ruleIds.includes(rule.id),
     );
     const writable = state.scopes.find((s) => s.id === rule.scope)?.writable;
-    el.innerHTML = `<div class="section-label inspector-heading"><span class="eyebrow">Rule details</span><button class="subtle" data-action="unfocus" aria-label="Close rule details">×</button></div><h1>${esc(rule.title)}</h1><div class="badges"><span class="badge">${esc(rule.scope)}</span><span class="badge">${esc(rule.category)}</span></div><p class="rule-body">${esc(rule.text)}</p><div class="inspector-actions"><button class="${state.selected.includes(rule.key) ? "" : "primary"}" data-action="toggle-focused">${state.selected.includes(rule.key) ? "✓ Selected · remove" : "+ Select for task"}</button><button data-action="edit" ${writable ? "" : "disabled"}>Edit</button></div><h2>Related rules <span class="count">${linked.length}</span></h2><div class="related-list">${linked.length ? linked.map((r) => `<button data-rule="${esc(r.key)}">↗ ${esc(r.title)}</button>`).join("") : '<p class="hint">Edit this rule to link related constraints.</p>'}</div><h2>Used in presets</h2><div class="related-list">${presets.length ? presets.map((p) => `<button data-preset="${esc(p.key)}">◇ ${esc(p.title)}</button>`).join("") : '<p class="hint">This rule isn’t part of a preset yet.</p>'}</div>`;
+    el.innerHTML = `<div class="section-label inspector-heading"><span class="eyebrow">Rule details</span><button class="subtle" data-action="unfocus" aria-label="Close rule details">×</button></div><h1>${esc(rule.title)}</h1><div class="badges"><span class="badge">${esc(rule.scope)}</span><span class="badge">${esc(rule.category)}</span></div><p class="rule-body">${esc(rule.text)}</p>${sourceDetails(rule)}<div class="inspector-actions"><button class="${state.selected.includes(rule.key) ? "" : "primary"}" data-action="toggle-focused">${state.selected.includes(rule.key) ? "✓ Selected · remove" : "+ Select for task"}</button><button data-action="edit" ${writable ? "" : "disabled"}>Edit</button></div><h2>Related rules <span class="count">${linked.length}</span></h2><div class="related-list">${linked.length ? linked.map((r) => `<button data-rule="${esc(r.key)}">↗ ${esc(r.title)}</button>`).join("") : '<p class="hint">Edit this rule to link related constraints.</p>'}</div><h2>Used in presets</h2><div class="related-list">${presets.length ? presets.map((p) => `<button data-preset="${esc(p.key)}">◇ ${esc(p.title)}</button>`).join("") : '<p class="hint">This rule isn’t part of a preset yet.</p>'}</div>`;
+  }
+  function sourceDetails(rule) {
+    return `${rule.appliesTo && rule.appliesTo !== "." ? `<p class="hint">Applies only within <strong>${esc(rule.appliesTo)}/</strong></p>` : ""}${rule.sources?.length ? `<h2>Sources</h2><div class="related-list">${rule.sources.map((s,i) => rule.scope === "project" ? `<button data-source="${i}" data-source-rule="${esc(rule.key)}">${esc(s.path)}:${s.line}</button>` : `<span>${esc(s.path)}:${s.line}</span>`).join("")}</div>` : ""}`;
   }
   function showDialog(title, body, actions) {
     editRevision = state.revision;
@@ -321,6 +328,10 @@
     const target = e.target.closest("button");
     if (!target) return;
     try {
+      if (target.dataset.source !== undefined) {
+        await request("openSource", { key: target.dataset.sourceRule, index: Number(target.dataset.source) });
+        return;
+      }
       if (target.dataset.scope) {
         scope = target.dataset.scope;
         render();
@@ -346,6 +357,7 @@
         return;
       }
       const action = target.dataset.action;
+      if (action === "generate") await request("generate");
       if (action === "new") editRule();
       if (action === "edit") editRule(state.rules.find((r) => r.key === focus));
       if (action === "new-preset") editPreset();
