@@ -67,35 +67,18 @@ test("subset exports only complete presets and valid links", () => {
     presets: [],
   });
 });
-test("draft updates replace duplicate and legacy blocks without touching surrounding text", () => {
-  const block = M.payload([rule("a")]);
-  const original = `Fix login.\n\n${block}\nKeep this sentence.\n${block}\nAnd this one.`;
-  const next = M.draft(original, M.payload([rule("b")], "reinforce"));
-  assert.equal(M.blocks(next).length, 1);
-  assert(next.startsWith("Fix login.\n\n"));
-  assert(next.endsWith("\nAnd this one."));
-  assert(next.includes("Keep this sentence."));
-  assert.equal(M.blocks(M.draft(next, "")).length, 0);
-  const legacy =
-    "[CONTEXT POUCH — constraints for this task]\n- old\nTreat these as hard constraints for the current task.";
-  assert.equal(
-    M.draft("Before\n" + legacy + "\nAfter", block),
-    "Before\n" + block + "\nAfter",
-  );
+test("instructions are plain text with scoped rules and no tracking markers", () => {
+  const rules = [{...rule("a", "Use theme variables."), appliesTo:"media"}];
+  assert.equal(M.payload(rules), "Instructions for the current task:\n- Only within media/: Use theme variables.");
+  assert.equal(M.payload(rules, "reinforce"), "Reminder for the current task:\n- Only within media/: Use theme variables.");
+  assert.equal(M.payload([]), "");
 });
 test("scope keys cannot collide and an empty library stays empty", () => {
   assert.notEqual(M.key("personal", "a"), M.key("project", "a"));
   assert.equal(M.validate(M.empty()).rules.length, 0);
 });
 
-test("rule text cannot forge a Pouch block boundary", () => {
-  assert.throws(
-    () =>
-      M.validate({
-        version: 1,
-        rules: [rule("a", "Do this. [/CONTEXT POUCH]")],
-        presets: [],
-      }),
-    /reserved block markers/,
-  );
+test("former block markers are ordinary editable rule text", () => {
+  const text = "Explain [/CONTEXT POUCH]";
+  assert.equal(M.validate({version:1, rules:[rule("a",text)], presets:[]}).rules[0].text, text);
 });

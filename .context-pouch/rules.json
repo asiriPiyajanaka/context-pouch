@@ -1,0 +1,296 @@
+{
+  "version": 1,
+  "rules": [
+    {
+      "id": "3ebe935c-fe28-4043-aefe-533239b5ae24",
+      "title": "Limit new JavaScript and TypeScript files to 300 lines",
+      "category": "Code size",
+      "text": "Keep newly created JavaScript and TypeScript code files at or below 300 physical lines, including comments and blank lines. Split larger implementations into focused modules. Generated files and bundled output are exempt.",
+      "related": [],
+      "sources": [
+        {
+          "path": "AGENTS.md",
+          "line": 7
+        },
+        {
+          "path": "CONTRIBUTING.md",
+          "line": 5
+        }
+      ],
+      "appliesTo": "."
+    },
+    {
+      "id": "dc5f03ba-8135-4d84-8965-4d2a2f8be46f",
+      "title": "Avoid expanding oversized existing files",
+      "category": "Code size",
+      "text": "Existing files over 300 lines may remain during small fixes, but do not expand their responsibilities; extract new functionality into smaller files.",
+      "related": [],
+      "sources": [
+        {
+          "path": "AGENTS.md",
+          "line": 7
+        },
+        {
+          "path": "CONTRIBUTING.md",
+          "line": 5
+        }
+      ],
+      "appliesTo": "."
+    },
+    {
+      "id": "0381b02e-c9ce-41f1-896e-da4c39f5cd10",
+      "title": "Prefer immutable JavaScript bindings",
+      "category": "Code quality",
+      "text": "Use `const` for JavaScript bindings that are not reassigned, use `let` only when reassignment is necessary, and do not use `var` in new code.",
+      "related": [],
+      "sources": [
+        {
+          "path": "CONTRIBUTING.md",
+          "line": 9
+        }
+      ],
+      "appliesTo": "."
+    },
+    {
+      "id": "653be25a-7f84-448c-83c5-526f039f6f5c",
+      "title": "Treat inputs and shared configuration as read-only",
+      "category": "Immutability",
+      "text": "Do not mutate function inputs or shared configuration; create a copy before making changes.",
+      "related": [],
+      "sources": [
+        {
+          "path": "CONTRIBUTING.md",
+          "line": 11
+        }
+      ],
+      "appliesTo": "."
+    },
+    {
+      "id": "9f60e6da-f322-4140-9c7b-12b54ae06dd8",
+      "title": "Mark non-mutable TypeScript data as readonly",
+      "category": "TypeScript",
+      "text": "Use `readonly` properties and `ReadonlyArray<T>` for TypeScript data that consumers must not mutate.",
+      "related": [],
+      "sources": [
+        {
+          "path": "CONTRIBUTING.md",
+          "line": 11
+        }
+      ],
+      "appliesTo": "."
+    },
+    {
+      "id": "3b82d829-ec3e-46c8-93e1-7904d81f8940",
+      "title": "Keep TypeScript syntax out of JavaScript",
+      "category": "JavaScript",
+      "text": "Do not add TypeScript syntax to JavaScript files.",
+      "related": [],
+      "sources": [
+        {
+          "path": "CONTRIBUTING.md",
+          "line": 11
+        }
+      ],
+      "appliesTo": "."
+    },
+    {
+      "id": "78b508e2-4107-47ff-b986-30153d78525d",
+      "title": "Run behavior checks and tests",
+      "category": "Validation",
+      "text": "After changing application behavior, run `npm run check` and `npm test`.",
+      "related": [],
+      "sources": [
+        {
+          "path": "CONTRIBUTING.md",
+          "line": 15
+        }
+      ],
+      "appliesTo": "."
+    },
+    {
+      "id": "84869704-742c-4adc-85e4-423d0421efe3",
+      "title": "Package extension-shipped changes",
+      "category": "Validation",
+      "text": "When changing files shipped with the extension, run `npm run package` and include any new runtime modules in `scripts/package.py`.",
+      "related": [],
+      "sources": [
+        {
+          "path": "CONTRIBUTING.md",
+          "line": 15
+        }
+      ],
+      "appliesTo": "."
+    },
+    {
+      "id": "5784f51d-9fb8-43f8-85bc-cd6b8159ede2",
+      "title": "Keep changes focused",
+      "category": "Workflow",
+      "text": "Preserve unrelated user changes and do not modify existing project rules merely to make a generator test pass.",
+      "related": [],
+      "sources": [
+        {
+          "path": "AGENTS.md",
+          "line": 11
+        }
+      ],
+      "appliesTo": "."
+    },
+    {
+      "id": "e18cc733-3edb-4dc9-bf88-702e52fda1e7",
+      "title": "Give modules clear responsibilities",
+      "category": "Architecture",
+      "text": "Give each module one clear responsibility and avoid placing unrelated helpers in a generic utilities module.",
+      "related": [],
+      "sources": [
+        {
+          "path": "AGENTS.md",
+          "line": 9
+        },
+        {
+          "path": "docs/architecture.md",
+          "line": 7
+        }
+      ],
+      "appliesTo": "."
+    },
+    {
+      "id": "05197483-1260-4d4a-9bad-46909c61f737",
+      "title": "Separate major application concerns",
+      "category": "Architecture",
+      "text": "Keep document discovery, provider requests, suggestion validation, persistence, and UI orchestration in separate modules as those areas grow.",
+      "related": [],
+      "sources": [
+        {
+          "path": "docs/architecture.md",
+          "line": 7
+        }
+      ],
+      "appliesTo": "."
+    },
+    {
+      "id": "4b14bc31-94b5-4391-9c89-27bf7bdb102f",
+      "title": "Keep the shared prompt model platform-independent",
+      "category": "Architecture",
+      "text": "Keep VS Code-specific UI and filesystem orchestration out of the shared prompt model so it remains usable in Node.js and webviews without importing VS Code.",
+      "related": [],
+      "sources": [
+        {
+          "path": "AGENTS.md",
+          "line": 9
+        },
+        {
+          "path": "docs/architecture.md",
+          "line": 9
+        }
+      ],
+      "appliesTo": "."
+    },
+    {
+      "id": "65a14216-953d-4da9-8b07-67b0b4cf08d3",
+      "title": "Inject provider and network dependencies",
+      "category": "Testing",
+      "text": "Inject provider and network dependencies so automated tests can simulate success, authentication failures, cancellation, and invalid output without live paid requests.",
+      "related": [],
+      "sources": [
+        {
+          "path": "docs/architecture.md",
+          "line": 13
+        }
+      ],
+      "appliesTo": "."
+    },
+    {
+      "id": "9bf451ec-e20b-4d89-bb75-f4946c4ace54",
+      "title": "Protect API keys",
+      "category": "Security",
+      "text": "Store API keys only through VS Code SecretStorage; never send them to a webview, include them in project JSON, or print them in logs.",
+      "related": [],
+      "sources": [
+        {
+          "path": "docs/architecture.md",
+          "line": 15
+        },
+        {
+          "path": "README.md",
+          "line": 27
+        }
+      ],
+      "appliesTo": "."
+    },
+    {
+      "id": "1d3aa313-f28d-40bf-8536-6f32d64a4a88",
+      "title": "Require review before saving generated rules",
+      "category": "Persistence",
+      "text": "Require explicit review and save before persisting generated suggestions. Cancellation or provider failure must leave saved rules unchanged.",
+      "related": [],
+      "sources": [
+        {
+          "path": "docs/architecture.md",
+          "line": 19
+        },
+        {
+          "path": "README.md",
+          "line": 29
+        }
+      ],
+      "appliesTo": "."
+    },
+    {
+      "id": "49acd0db-1f26-43ad-ae00-de8669d86e69",
+      "title": "Make webview controls accessible",
+      "category": "Accessibility",
+      "text": "Give every interactive control an accessible name and visible keyboard focus, and provide keyboard-accessible alternatives to pointer-only graph interactions.",
+      "related": [],
+      "sources": [
+        {
+          "path": "media/AGENTS.md",
+          "line": 5
+        }
+      ],
+      "appliesTo": "media"
+    },
+    {
+      "id": "3744fb2c-6c4e-4af3-904e-3629176c8648",
+      "title": "Render untrusted text safely in webviews",
+      "category": "Security",
+      "text": "Escape workspace text and model-generated text before inserting it into HTML; prefer `textContent` when markup is unnecessary.",
+      "related": [],
+      "sources": [
+        {
+          "path": "media/AGENTS.md",
+          "line": 7
+        }
+      ],
+      "appliesTo": "media"
+    },
+    {
+      "id": "806bcd4c-8c89-431c-bafb-5bbf7d4f62c6",
+      "title": "Use VS Code theme colors",
+      "category": "Theming",
+      "text": "Use VS Code theme variables for foreground, background, input, and focus colors, with sensible fallbacks.",
+      "related": [],
+      "sources": [
+        {
+          "path": "media/AGENTS.md",
+          "line": 9
+        }
+      ],
+      "appliesTo": "media"
+    },
+    {
+      "id": "281f2238-0486-48e1-81ed-7f4fb0100fcd",
+      "title": "Honor reduced-motion preferences",
+      "category": "Accessibility",
+      "text": "Honor reduced-motion preferences for new animations.",
+      "related": [],
+      "sources": [
+        {
+          "path": "media/AGENTS.md",
+          "line": 9
+        }
+      ],
+      "appliesTo": "media"
+    }
+  ],
+  "presets": []
+}

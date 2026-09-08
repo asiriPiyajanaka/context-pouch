@@ -138,3 +138,26 @@ test("source edits during review reject saving stale suggestions", async t=>{
   await assert.rejects(env.ui.run(),/source document changed/);
   assert.equal((await env.library.dispatch("state")).rules.filter(r=>r.scope==="project").length,0);
 });
+test("provider path formatting normalizes without changing folder scope or input", () => {
+  for (const [scope, source] of [
+    ["./frontend/", "./frontend/AGENTS.md"],
+    ["frontend\\", "frontend\\AGENTS.md"],
+    ["frontend//./", "./frontend//AGENTS.md"],
+  ]) {
+    const input = {...suggestion(), appliesTo:scope, sources:[{path:source,line:1}]};
+    const result = G.normalize({rules:[input],warnings:[]},docs,[]);
+    assert.equal(result.rules[0].appliesTo,"frontend");
+    assert.equal(result.rules[0].sources[0].path,"frontend/AGENTS.md");
+    assert.equal(input.appliesTo,scope);
+    assert.equal(input.sources[0].path,source);
+  }
+  const root = G.normalize({rules:[{...suggestion(),appliesTo:"./",sources:[{path:"./AGENTS.md",line:1}]}],warnings:[]},[{path:"AGENTS.md",text:"Use shared UI."}],[]);
+  assert.equal(root.rules[0].appliesTo,".");
+});
+test("invalid provider paths identify the rule and field without accepting traversal", () => {
+  for (const invalid of ["../frontend", "frontend/../frontend", "/frontend", "C:\\frontend", "file:///frontend", "\\\\server\\frontend"]) {
+    assert.throws(()=>G.normalize({rules:[{...suggestion(),appliesTo:invalid}],warnings:[]},docs,[]), /Reuse components.*invalid appliesTo scope/);
+    assert.throws(()=>G.normalize({rules:[{...suggestion(),sources:[{path:invalid,line:1}]}],warnings:[]},docs,[]), /Reuse components.*invalid source path/);
+  }
+  assert.throws(()=>G.normalize({rules:[{...suggestion(),appliesTo:"./"}],warnings:[]},docs,[]), /broadened/);
+});

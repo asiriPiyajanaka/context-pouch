@@ -55,10 +55,6 @@
       ...(r?.sources !== undefined ? { sources: sources(r.sources) } : {}),
       ...(r?.appliesTo ? { appliesTo: relativePath(r.appliesTo) } : {}),
     }));
-    if (rules.some((r) => /\[\/?CONTEXT POUCH/.test(r.text)))
-      throw new Error(
-        "Rule text cannot contain Pouch's reserved block markers.",
-      );
     const presets = input.presets.map((p) => ({
       id: string(p?.id, "Preset ID", 150),
       title: string(p?.title, "Preset title", 100),
@@ -142,31 +138,9 @@
       ),
     });
   }
-  const START = "[CONTEXT POUCH — constraints]";
-  const END = "[/CONTEXT POUCH]";
   function payload(rules, mode = "inject") {
     if (!rules.length) return "";
-    return `${START}\n${mode === "reinforce" ? "Reminder for the current task:" : "Instructions for the current task:"}\n${rules.map((r) => "- " + (r.appliesTo && r.appliesTo !== "." ? `Only within ${r.appliesTo}/: ` : "") + r.text).join("\n")}\n${END}`;
-  }
-  function blocks(text) {
-    const result = [];
-    // Also recognize complete blocks produced by the original MVP.
-    const pattern =
-      /\[CONTEXT POUCH — constraints\][\s\S]*?\[\/CONTEXT POUCH\]|\[CONTEXT POUCH — (?:constraint reminder|constraints for this task)\][\s\S]*?(?:Continue the current task while respecting these constraints\.|Treat these as hard constraints for the current task\.)/g;
-    for (const m of text.matchAll(pattern))
-      result.push({ from: m.index, to: m.index + m[0].length });
-    return result;
-  }
-  function draft(text, block) {
-    const ranges = blocks(text);
-    if (!ranges.length)
-      return block ? text + (text.trim() ? "\n\n" : "") + block : text;
-    for (let i = ranges.length - 1; i >= 0; i--)
-      text =
-        text.slice(0, ranges[i].from) +
-        (i === 0 ? block : "") +
-        text.slice(ranges[i].to);
-    return text;
+    return `${mode === "reinforce" ? "Reminder for the current task:" : "Instructions for the current task:"}\n${rules.map((r) => "- " + (r.appliesTo && r.appliesTo !== "." ? `Only within ${r.appliesTo}/: ` : "") + r.text).join("\n")}`;
   }
   return {
     VERSION,
@@ -176,7 +150,5 @@
     mergePack,
     subset,
     payload,
-    blocks,
-    draft,
   };
 });

@@ -126,7 +126,7 @@ class GenerationUI {
     if (!choice) return;
     if (choice.source) { await this.openSource(choice.source, projectId); return; }
     const text = await vscode.window.showInputBox({ title: choice.label, value: rule[choice.field], ignoreFocusOut: true,
-      validateInput: v => !v.trim() || v.length > choice.max ? `Enter 1–${choice.max} characters.` : /\[\/?CONTEXT POUCH/.test(v) ? "Pouch block markers are reserved." : undefined });
+      validateInput: v => !v.trim() || v.length > choice.max ? `Enter 1–${choice.max} characters.` : undefined });
     if (text !== undefined) rule[choice.field] = text.trim();
     M.validate({version:1, rules:[rule], presets:[]});
   }

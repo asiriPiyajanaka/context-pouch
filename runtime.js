@@ -62,7 +62,7 @@
   panel.setAttribute("aria-modal", "false");
   button.setAttribute("aria-controls", panel.id);
   button.setAttribute("aria-expanded", "false");
-  panel.innerHTML = `<div class="cp-head"><strong>Pouch</strong><span class="cp-count"></span><button data-action="graph" title="Open rule graph in a new tab" aria-label="Open rule graph">Graph ↗</button><button data-action="close" aria-label="Close Pouch">×</button></div><div class="cp-mode" aria-label="Pouch mode"><button data-action="simple" aria-pressed="true">Simple</button><button data-action="advanced" aria-pressed="false">Advanced</button></div><div class="cp-error" role="status"></div><div class="cp-main"><div class="cp-tools"><input class="cp-search" aria-label="Search rules" placeholder="Find a rule…"><div class="cp-advanced"><select class="cp-scope" aria-label="Filter by library"><option value="all">All libraries</option></select><select class="cp-category" aria-label="Filter by category"><option value="all">All categories</option></select></div><div><select class="cp-preset" aria-label="Task preset"><option value="">Choose a preset…</option></select><button class="cp-advanced" data-action="preset">Save preset</button></div></div><div class="cp-list"></div><div class="cp-footer"><button class="cp-wide" data-action="generate">Generate rules from project</button><button class="cp-primary" data-action="preview">Review selected rules</button><button class="cp-advanced" data-action="reinforce">Reinforce selected</button><div class="cp-wide cp-meta cp-advanced"><button data-action="add">+ Rule</button><button data-action="clear">Clear selection</button><button data-action="remove">Remove draft block</button></div></div></div><div class="cp-dialog"></div>`;
+  panel.innerHTML = `<div class="cp-head"><strong>Pouch</strong><span class="cp-count"></span><button data-action="graph" title="Open rule graph in a new tab" aria-label="Open rule graph">Graph ↗</button><button data-action="close" aria-label="Close Pouch">×</button></div><div class="cp-mode" aria-label="Pouch mode"><button data-action="simple" aria-pressed="true">Simple</button><button data-action="advanced" aria-pressed="false">Advanced</button></div><div class="cp-error" role="status"></div><div class="cp-main"><div class="cp-tools"><input class="cp-search" aria-label="Search rules" placeholder="Find a rule…"><div class="cp-advanced"><select class="cp-scope" aria-label="Filter by library"><option value="all">All libraries</option></select><select class="cp-category" aria-label="Filter by category"><option value="all">All categories</option></select></div><div><select class="cp-preset" aria-label="Task preset"><option value="">Choose a preset…</option></select><button class="cp-advanced" data-action="preset">Save preset</button></div></div><div class="cp-list"></div><div class="cp-footer"><button class="cp-wide" data-action="generate">Generate rules from project</button><button class="cp-primary" data-action="preview">Review selected rules</button><button class="cp-advanced" data-action="reinforce">Reinforce selected</button><div class="cp-wide cp-meta cp-advanced"><button data-action="add">+ Rule</button><button data-action="clear">Clear selection</button></div></div></div><div class="cp-dialog"></div>`;
   let resizingAnimation;
   function setMode(next) {
     const before = panel.classList.contains("open")
@@ -386,125 +386,33 @@
         )}</select></label><label><span>Title</span><input name="title" maxlength="100" value="${esc(rule?.title || "")}"></label><label><span>Category</span><input name="category" maxlength="50" value="${esc(rule?.category || "Other")}"></label><label><span>Rule text</span><textarea name="text" maxlength="5000">${esc(rule?.text || "")}</textarea></label><div class="cp-actions"><button class="cp-primary" data-action="save">Save rule</button><button data-action="cancel">Cancel</button>${rule ? '<button data-action="delete">Delete rule</button>' : ""}</div>`,
     );
   }
-  // Map only editor text to DOM positions. Attachment nodes are never replaced.
-  function domText(ed) {
-    let text = "";
-    const points = [];
-    const visit = (node) => {
-      if (node.nodeType === Node.TEXT_NODE) {
-        for (let i = 0; i < node.textContent.length; i++) {
-          points.push({ node, offset: i });
-          text += node.textContent[i];
-        }
-      } else {
-        if (node !== ed && node.getAttribute?.("contenteditable") === "false") {
-          points.push(null);
-          text += "\ufffc";
-          return;
-        }
-        if (node.nodeName === "BR") {
-          points.push(null);
-          text += "\n";
-        }
-        for (const child of node.childNodes) visit(child);
-        if (["P", "DIV", "LI"].includes(node.nodeName) && node !== ed) {
-          points.push(null);
-          text += "\n";
-        }
-      }
-    };
-    visit(ed);
-    return { text, points };
-  }
-  function writeBlock(block) {
+  function insertInstructions(text) {
     const ed = findEditor();
     if (!ed)
-      throw new Error(
-        "No active Codex composer. Click your draft and try again.",
-      );
-    const initial = domText(ed).text;
-    const ranges = M.blocks(initial);
-    if (!ranges.length && !block)
-      throw new Error("There is no Pouch block in this draft.");
-    // Refuse malformed/truncated markers rather than adding competing instructions.
-    if (!ranges.length && initial.includes("[CONTEXT POUCH"))
-      throw new Error(
-        "The existing Pouch block is incomplete. Remove it from the draft manually first.",
-      );
+      throw new Error("No active Codex composer. Click your draft and try again.");
+    if (!text) return;
+    const hasContent = Boolean(ed.textContent.trim()) ||
+      Boolean(ed.querySelector('[contenteditable="false"], img'));
     ed.focus();
-    if (ranges.length) {
-      for (let i = ranges.length - 1; i >= 0; i--) {
-        const map = domText(ed),
-          rangeInfo = M.blocks(map.text)[i];
-        if (!rangeInfo)
-          throw new Error("The composer changed. Review the draft and retry.");
-        if (map.text.slice(rangeInfo.from, rangeInfo.to).includes("\ufffc"))
-          throw new Error(
-            "Move attachments outside the Pouch block before replacing it.",
-          );
-        const start = map.points[rangeInfo.from],
-          end = map.points[rangeInfo.to - 1];
-        if (!start || !end)
-          throw new Error(
-            "Cannot safely locate this block. Remove it manually.",
-          );
-        const range = document.createRange();
-        range.setStart(start.node, start.offset);
-        range.setEnd(end.node, end.offset + 1);
-        const selection = window.getSelection();
-        selection.removeAllRanges();
-        selection.addRange(range);
-        if (
-          !document.execCommand(
-            i === 0 && block ? "insertText" : "delete",
-            false,
-            i === 0 ? block : "",
-          )
-        )
-          throw new Error(
-            "Codex rejected this edit. The draft may be partially updated; review it before retrying.",
-          );
-      }
-    } else {
-      const range = document.createRange();
-      range.selectNodeContents(ed);
-      range.collapse(false);
-      const selection = window.getSelection();
-      selection.removeAllRanges();
-      selection.addRange(range);
-      if (
-        !document.execCommand(
-          "insertText",
-          false,
-          (initial.trim() ? "\n\n" : "") + block,
-        )
-      )
-        throw new Error(
-          "Codex rejected the insertion. Run Install / Repair and reload.",
-        );
-    }
-    const after = domText(ed).text;
-    if (
-      (block && !after.includes(block.split("\n")[0])) ||
-      (!block && M.blocks(after).length)
-    )
-      throw new Error(
-        "Could not verify the draft update. Review it before sending.",
-      );
+    const range = document.createRange();
+    range.selectNodeContents(ed);
+    range.collapse(false);
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+    if (!document.execCommand("insertText", false, (hasContent ? "\n\n" : "") + text))
+      throw new Error("Codex rejected the insertion. Run Install / Repair and reload.");
     closeDialog();
     dismiss();
   }
   function preview(mode) {
-    const payload = M.payload(picked(), mode),
-      count = M.blocks(
-        domText(findEditor() || document.createElement("div")).text,
-      ).length;
+    const payload = M.payload(picked(), mode);
     dialog(
-      `<strong>${count ? "Replace existing Pouch block" : "Preview instructions"}</strong><p>Only the Pouch block is changed. Review your draft before sending.</p><pre>${esc(payload)}</pre><div class="cp-actions"><button class="cp-primary" data-action="apply">${count ? "Replace block" : "Insert into draft"}</button><button data-action="cancel">Back</button></div>`,
+      `<strong>Preview instructions</strong><p>These instructions will be added to the end of your draft. You can edit them before sending.</p><pre>${esc(payload)}</pre><div class="cp-actions"><button class="cp-primary" data-action="apply">Insert into draft</button><button data-action="cancel">Back</button></div>`,
     );
     panel.querySelector('[data-action="apply"]').onclick = () => {
       try {
-        writeBlock(payload);
+        insertInstructions(payload);
       } catch (e) {
         error(e.message);
       }
@@ -554,11 +462,6 @@
         edit(state.rules.find((r) => r.key === el.dataset.key));
       else if (action === "preview" || action === "reinforce")
         preview(action === "reinforce" ? "reinforce" : "inject");
-      else if (action === "remove") {
-        dialog(
-          '<strong>Remove Pouch instructions?</strong><p>This removes Pouch’s marked blocks from the current draft.</p><div class="cp-actions"><button data-action="confirm-remove">Remove block</button><button data-action="cancel">Cancel</button></div>',
-        );
-      } else if (action === "confirm-remove") writeBlock("");
       else if (action === "save") {
         const field = (name) =>
           panel.querySelector(`[name="${name}"]`).value.trim();
