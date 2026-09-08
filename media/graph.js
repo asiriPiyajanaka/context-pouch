@@ -5,7 +5,8 @@
   let state, focus = null, query = "", category = "", tab = "library";
   const remembered = api.getState?.() || {};
   let globalOpen = remembered.globalOpen === true;
-  app.innerHTML = `<div class="app"><header class="topbar"><div class="brand">Pouch <span class="muted">/ Rule library</span></div><label class="project-label">Project<select id="project" aria-label="Active project"></select></label><div class="top-actions"><button data-action="import">Import pack</button><button data-action="export">Export pack</button></div></header><div class="toolbar"><nav aria-label="Library views"><button data-tab="library" aria-pressed="true">Library</button><button data-tab="relationships" aria-pressed="false">Relationships</button></nav><button data-action="preview" class="primary">Preview active instructions</button></div><main class="workspace"><section class="library"><div class="filters"><input id="search" type="search" placeholder="Search rules…" aria-label="Search rules"><select id="category" aria-label="Category filter"></select><select id="focused-rule" aria-label="Choose a rule to visualize" hidden></select></div><div class="library-actions"><button data-action="new">+ Project rule</button><button data-action="generate">Generate rules</button><button data-action="save-defaults">Save selection as defaults</button><button data-action="restore-defaults">Restore defaults</button></div><div class="rules-content"></div><section class="presets"><div class="section-heading"><h2>Task presets</h2><button data-action="new-preset">Save preset</button></div><div id="preset-list"></div></section><details class="sharing"><summary>Share project rules</summary><p class="muted">Your local library is saved automatically. Import and export the repository file when you want to share changes.</p><button data-action="import-shared">Import .context-pouch/rules.json</button><button data-action="export-shared">Export .context-pouch/rules.json</button></details></section><aside class="inspector" aria-label="Rule details"></aside></main><footer class="statusbar"><span id="summary">Loading your library…</span><button data-action="clear">Clear selection</button><span class="message" role="status"></span></footer><dialog id="editor-dialog"></dialog></div>`;
+  let graphData = null, graphRevision = null, graphRequest = 0;
+  app.innerHTML = `<div class="app"><header class="topbar"><div class="brand">Pouch <span class="muted">/ Rule library</span></div><label class="project-label">Project<select id="project" aria-label="Active project"></select></label><div class="top-actions"><button data-action="import">Import pack</button><button data-action="export">Export pack</button></div></header><div class="toolbar"><nav aria-label="Library views"><button data-tab="library" aria-pressed="true">Library</button><button data-tab="relationships" aria-pressed="false">Graph</button></nav><button data-action="preview" class="primary">Preview active instructions</button></div><main class="workspace"><section class="library"><div class="filters"><input id="search" type="search" placeholder="Search rules…" aria-label="Search rules"><select id="category" aria-label="Category filter"></select><select id="focused-rule" aria-label="Choose a rule to visualize" hidden></select></div><div class="library-actions"><button data-action="new">+ Project rule</button><button data-action="generate">Generate rules</button><button data-action="save-defaults">Save selection as defaults</button><button data-action="restore-defaults">Restore defaults</button></div><div class="rules-content"></div><div class="graph-container" hidden></div><section class="presets"><div class="section-heading"><h2>Task presets</h2><button data-action="new-preset">Save preset</button></div><div id="preset-list"></div></section><details class="sharing"><summary>Share project rules</summary><p class="muted">Your local library is saved automatically. Import and export the repository file when you want to share changes.</p><button data-action="import-shared">Import .context-pouch/rules.json</button><button data-action="export-shared">Export .context-pouch/rules.json</button></details></section><aside class="inspector" aria-label="Rule details"></aside></main><footer class="statusbar"><span id="summary">Loading your library…</span><button data-action="clear">Clear selection</button><span class="message" role="status"></span></footer><dialog id="editor-dialog"></dialog></div>`;
   const modal = app.querySelector("dialog");
   function status(message = "", error = false) {
     const el = app.querySelector(".message"); el.textContent=message; el.classList.toggle("error",error); el.title=message;
@@ -19,6 +20,24 @@
     catch(e){status(e.message,true);rpc("state").catch(()=>{});throw e;}
   }
   const dialogs=window.createPouchDialogs({modal,getState:()=>state,request,status});
+  const graph=window.createPouchGraph({container:app.querySelector(".graph-container"),onInspect:node=>{
+    focus=node?.current ? node.localKey : null;
+    app.querySelector(".inspector").innerHTML=window.renderGraphInspector(node,graphData,state);
+  }});
+  async function refreshGraph() {
+    const sequence=++graphRequest;
+    try {
+      const result=await rpc("graphState");
+      if(sequence!==graphRequest)return;
+      if(result.graph.activeProject!==state.project)return;
+      graphData=result.graph;graphRevision=result.graph.revision;graph.setData(graphData);
+      if(tab==="relationships"){
+        if(!graph.selected() && focus){const node=graphData.nodes.find(n=>n.current&&n.localKey===focus);if(node)graph.focus(node.graphId);}
+        const node=graph.selected();if(node)focus=node.current?node.localKey:null;
+        app.querySelector(".inspector").innerHTML=window.renderGraphInspector(node,graphData,state);
+      }
+    } catch(e){status(e.message,true);}
+  }
   function render() {
     if(focus && !state.rules.some(r=>r.key===focus))focus=null;
     const projects=app.querySelector("#project");
@@ -27,15 +46,22 @@
     const categories=app.querySelector("#category");
     categories.innerHTML='<option value="">All categories</option>'+[...new Set(state.rules.map(r=>r.category))].sort().map(c=>`<option>${V.esc(c)}</option>`).join("");
     categories.value=category;
-    const picker=app.querySelector("#focused-rule");
-    picker.innerHTML='<option value="">Choose a rule…</option>'+state.rules.map(r=>`<option value="${V.esc(r.key)}">${V.esc(r.title)} · ${r.scope==="personal"?"Global":"Project"}</option>`).join("");
-    picker.value=focus || ""; picker.hidden=tab!=="relationships";
-    app.querySelector("#search").hidden=tab!=="library"; categories.hidden=tab!=="library";
+    app.querySelector("#focused-rule").hidden=true;
+    app.querySelector(".filters").hidden=tab!=="library";
+    app.querySelector(".library-actions").hidden=tab!=="library";
+    app.querySelector(".presets").hidden=tab!=="library";
+    app.querySelector(".sharing").hidden=tab!=="library";
+    app.querySelector(".rules-content").hidden=tab!=="library";
+    app.querySelector(".graph-container").hidden=tab!=="relationships";
     app.querySelectorAll("[data-tab]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.tab===tab)));
-    app.querySelector(".rules-content").innerHTML=tab === "library" ? V.list(state,focus,query,category,globalOpen) : V.relationships(state,focus);
+    app.querySelector(".rules-content").innerHTML=V.list(state,focus,query,category,globalOpen);
+    if(tab==="relationships"){
+      if(graphRevision!==state.revision)refreshGraph();
+      else graph.reveal();
+    }
     const details=app.querySelector(".global-section");
     if(details)details.addEventListener("toggle",()=>{globalOpen=details.open;api.setState?.({globalOpen});});
-    app.querySelector(".inspector").innerHTML=V.inspector(state,focus);
+    app.querySelector(".inspector").innerHTML=tab==="relationships" && graphData ? window.renderGraphInspector(graph.selected(),graphData,state) : V.inspector(state,focus);
     app.querySelector("#summary").textContent=`${state.selected.length} active instructions${state.activeConflicts.length?` · ${state.activeConflicts.length} confirmed conflicts`:""}`;
     const writable=state.scopes.some(s=>s.id==="project" && s.writable);
     for(const action of ["new","generate","save-defaults","import-shared","export-shared"])
@@ -52,7 +78,8 @@
     const target=e.target.closest("button"); if(!target)return;
     try {
       if(target.dataset.tab){tab=target.dataset.tab;render();return;}
-      if(target.dataset.rule){focus=target.dataset.rule;render();return;}
+      if(target.dataset.rule){focus=target.dataset.rule;if(tab==="relationships"&&graphData){const node=graphData.nodes.find(n=>n.current&&n.localKey===focus);if(node)graph.focus(node.graphId);}render();return;}
+      if(target.dataset.openGraphProject){await request("activateGraphProject",{project:target.dataset.openGraphProject});return;}
       if(target.dataset.source!==undefined){await request("openSource",{key:target.dataset.sourceRule,index:Number(target.dataset.source)});return;}
       if(target.dataset.preset){const p=state.presets.find(p=>p.key===target.dataset.preset);await request("select",{keys:p.ruleIds.map(id=>window.ContextPouchModel.key(p.scope,id))});return;}
       if(target.dataset.editPreset){dialogs.preset(state.presets.find(p=>p.key===target.dataset.editPreset));return;}
@@ -62,7 +89,7 @@
       if(action==="new")dialogs.rule();
       if(action==="new-global")dialogs.rule(undefined,"personal");
       if(action==="edit" && rule)dialogs.rule(rule);
-      if(action==="unfocus"){focus=null;render();}
+      if(action==="unfocus"){focus=null;graph.focus(null);render();}
       if(action==="new-preset")dialogs.preset();
       if(action==="preview")dialogs.preview();
       if(action==="clear")await request("select",{keys:[]});
@@ -73,7 +100,12 @@
       if(action==="toggle-focused" && rule)await request("toggle",{key:rule.key});
       if(action==="override" && rule)dialogs.relationship("override",rule);
       if(action==="conflict" && rule)dialogs.relationship("conflict",rule);
-      if(action==="relationships"){tab="relationships";render();}
+      if(action==="relationships"){
+        tab="relationships";render();
+        await refreshGraph();
+        const node=graphData?.nodes.find(n=>n.current&&n.localKey===focus);
+        if(node)graph.focus(node.graphId,"focused");
+      }
       if(action==="import" || action==="export")dialogs.pack(action);
       if(action==="import-shared")await request("import",{scope:"project",shared:true});
       if(action==="export-shared")await request("export",{scope:"project",shared:true});

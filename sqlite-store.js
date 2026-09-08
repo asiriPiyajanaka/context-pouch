@@ -29,6 +29,7 @@ class SqliteStore {
       PRAGMA user_version=1;`);
   }
   revision() { return this.db.prepare("SELECT value FROM metadata WHERE key='revision'").get().value; }
+  projects() { return this.db.prepare("SELECT id,uri,name FROM projects ORDER BY name,uri").all(); }
   transaction(fn, expected) {
     this.db.exec("BEGIN IMMEDIATE");
     try {

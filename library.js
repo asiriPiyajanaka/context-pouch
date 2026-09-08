@@ -5,6 +5,7 @@ const M = require("./model");
 const { SqliteStore } = require("./sqlite-store");
 const { resolve } = require("./rule-state");
 const files = require("./pack-files");
+const { graphSnapshot } = require("./graph-snapshot");
 const GLOBAL = "@global";
 class Library {
   constructor(context, changed) {
@@ -32,16 +33,17 @@ class Library {
           scope.id === "project" ? {selected:legacy ?? null, defaults:legacy ?? null, disabled:[], overrides:[], conflicts:[]} : null);
       }
     }
-    this.store.snapshot(() => {
-      this.packs = Object.fromEntries(this.scopes.map(s => [s.id, this.store.read(s.storage)]));
-      this.preferences = this.store.preferences(this.projectId || "@no-project");
-      this.globalDefaults = this.store.preferences(GLOBAL).defaults || [];
-      this.dbRevision = this.store.revision();
-    });
-    this.revision = `${this.dbRevision}:${this.projectId}`;
+    this.store.snapshot(() => this.readStoredState());
     const state = this.snapshot();
     this.selected = state.selected;
     return state;
+  }
+  readStoredState() {
+    this.packs = Object.fromEntries(this.scopes.map(s => [s.id, this.store.read(s.storage)]));
+    this.preferences = this.store.preferences(this.projectId || "@no-project");
+    this.globalDefaults = this.store.preferences(GLOBAL).defaults || [];
+    this.dbRevision = this.store.revision();
+    this.revision = `${this.dbRevision}:${this.projectId}`;
   }
   snapshot() {
     const rules = this.scopes.flatMap(s => this.packs[s.id].rules.map(r => ({...r, scope:s.id, key:M.key(s.id,r.id)})));
@@ -149,6 +151,10 @@ class Library {
     const job = this.queue.then(async () => {
       await this.load();
       if (action === "state") return this.snapshot();
+      if (action === "graphState") return {graph:this.store.snapshot(()=>{
+        this.readStoredState();
+        return graphSnapshot(this.store,this.snapshot(),this.roots().map(r=>({id:r.uri.toString(),name:r.name})));
+      })};
       if (data.revision && data.revision !== this.revision) throw new Error("The library changed elsewhere. Refresh and try again.");
       if (action === "project") {
         if (!this.roots().some(r=>r.uri.toString() === data.id)) throw new Error("Project is no longer open.");

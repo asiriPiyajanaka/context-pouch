@@ -67,7 +67,7 @@ function graphHtml(webview, extensionUri) {
   const nonce = crypto.randomBytes(18).toString("base64");
   const resource = (file) =>
     webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, file));
-  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src 'nonce-${nonce}'; img-src ${webview.cspSource} data:;"><link rel="stylesheet" href="${resource("media/graph.css")}"><title>Pouch · Rule library</title></head><body><div id="app"></div><script nonce="${nonce}" src="${resource("model.js")}"></script><script nonce="${nonce}" src="${resource("client.js")}"></script><script nonce="${nonce}" src="${resource("media/library-view.js")}"></script><script nonce="${nonce}" src="${resource("media/library-dialogs.js")}"></script><script nonce="${nonce}" src="${resource("media/graph.js")}"></script></body></html>`;
+  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src 'nonce-${nonce}'; img-src ${webview.cspSource} data:;"><link rel="stylesheet" href="${resource("media/graph.css")}"><link rel="stylesheet" href="${resource("media/node-graph.css")}"><title>Pouch · Rule library</title></head><body><div id="app"></div><script nonce="${nonce}" src="${resource("model.js")}"></script><script nonce="${nonce}" src="${resource("client.js")}"></script><script nonce="${nonce}" src="${resource("media/library-view.js")}"></script><script nonce="${nonce}" src="${resource("media/library-dialogs.js")}"></script><script nonce="${nonce}" src="${resource("media/graph-model.js")}"></script><script nonce="${nonce}" src="${resource("media/graph-renderer.js")}"></script><script nonce="${nonce}" src="${resource("media/graph-explorer.js")}"></script><script nonce="${nonce}" src="${resource("media/graph-inspector.js")}"></script><script nonce="${nonce}" src="${resource("media/graph.js")}"></script></body></html>`;
 }
 function activate(context) {
   const clients = new Set();
@@ -156,6 +156,17 @@ function activate(context) {
     if (action === "generate") {
       await report(() => generation.run())();
       return library.dispatch("state");
+    }
+    if (action === "activateGraphProject") {
+      const project = library.store.projects().find(p=>p.uri===data.project);
+      if (!project) throw new Error("Saved project no longer exists.");
+      if (library.roots().some(r=>r.uri.toString()===data.project))
+        return library.dispatch("project",{id:data.project});
+      const uri = vscode.Uri.parse(project.uri);
+      try { await vscode.workspace.fs.stat(uri); }
+      catch (_) { throw new Error("This project folder is no longer available at its saved path."); }
+      await vscode.commands.executeCommand("vscode.openFolder",uri,{forceNewWindow:true});
+      return null;
     }
     if (action === "openSource") {
       const state = await library.dispatch("state");

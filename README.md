@@ -18,11 +18,17 @@ Open **Library ↗** beside the composer, run **Context Pouch: Open Rule Library
 
 Priority is explicit, not inferred from rule titles or list order. In a project rule's details, choose **Override a global rule**. When that project rule is selected, the global rule is excluded from the active instructions. Deselecting the project rule makes the global rule eligible again. Folder-specific overrides must have matching scope so a narrow project rule cannot suppress a broader global instruction.
 
-The **Relationships** tab shows only connections involving the chosen rule, with direction and labels:
+The **Graph** tab restores a node-and-edge view with three modes: **Project overview**, **Focused rule**, and **All rules**. All rules includes Global rules and every project already saved in SQLite, including closed projects. It does not scan unopened repositories. Connections have direction and labels:
 
 - **Overrides:** a project rule supersedes a global rule in this project.
 - **Related to:** manually linked rules within the same library.
 - **Conflicts with · confirmed:** a conflict marked by the user for this project. If both rules are active, Pouch requires deselecting one before composer insertion. Removing an incorrect conflict is also possible in rule details.
+
+The graph uses a free-form network layout with circular project nodes, diamond-shaped Global nodes, and soft labeled project clusters. Local repulsion, relationship attraction, and gentle project grouping arrange the network organically. There are no card grids or flowchart lanes. Selected nodes have an outline and check mark, while disabled/overridden globals are faded. Global status always refers to the active project, and project-specific connections carry the project name.
+
+A collapsible filter panel offers project multi-select (All/Current shortcuts), categories, relationship types, search, and Reset. All rules starts with all globals visible. In project mode, only connected globals appear unless Show all global rules is enabled. Pan, zoom, Fit, and unrestricted node dragging are available; node positions remain stable for the lifetime of the view. Relationship labels appear when their node is focused or their connection is hovered, keeping the overview uncluttered. Layout settles without motion, including for reduced-motion users. The rule picker provides keyboard navigation and centers the chosen rule.
+
+Clicking a node inspects it without changing selection. Use the separate **Use in prompt** checkbox for an active-project or global rule. Other projects are read-only previews; switch to an open project or open a saved project in a new window before editing/selecting its rules. Unrelated rules remain unconnected; categories remain available as filters and node subtitles.
 
 Categories and presets are not graph nodes. A searchable rule picker and regular buttons make relationship navigation keyboard accessible. Conflict detection is manual; Pouch does not infer that two instructions contradict each other.
 
@@ -85,7 +91,7 @@ Generation is cancellable and times out after three minutes. Cancelling or provi
 
 ## Install and test
 
-Run `npm run package`, then use **Extensions → … → Install from VSIX…** with `dist/context-pouch-codex-0.3.0.vsix`. Run **Context Pouch: Install / Repair Codex Button** and reload VS Code after updating. Automatic repair detects changes in Pouch and Codex once enabled.
+Run `npm run package`, then use **Extensions → … → Install from VSIX…** with `dist/context-pouch-codex-0.3.2.vsix`. Run **Context Pouch: Install / Repair Codex Button** and reload VS Code after updating. Automatic repair detects changes in Pouch and Codex once enabled.
 
 **Context Pouch: Restore Codex** restores the original bundles and keeps your libraries. Restore before uninstalling Pouch, then reload.
 
