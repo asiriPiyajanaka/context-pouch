@@ -32,10 +32,21 @@
     #context-pouch-panel.open{display:flex}#context-pouch-panel *{box-sizing:border-box}#context-pouch-panel button,#context-pouch-panel input,#context-pouch-panel select,#context-pouch-panel textarea{font:inherit;color:inherit}#context-pouch-panel button{cursor:pointer;border:1px solid #8884;border-radius:7px;background:transparent;padding:6px 9px}#context-pouch-panel button:hover{background:#8882}#context-pouch-panel button:disabled{opacity:.4;cursor:default}#context-pouch-panel :focus-visible{outline:2px solid var(--vscode-focusBorder,#a798ed);outline-offset:2px}
     .cp-head,.cp-actions{display:flex;gap:7px;align-items:center;padding:11px 12px;border-bottom:1px solid #8883}.cp-head strong{flex:1}.cp-count{font-size:10px;opacity:.65}.cp-tools{padding:10px 12px;display:grid;gap:7px}.cp-tools>div{display:flex;gap:7px}.cp-tools select{min-width:0;flex:1}.cp-list{overflow:auto;min-height:70px;max-height:300px;padding:0 8px 8px}.cp-row{display:flex;align-items:flex-start;gap:7px;padding:8px;border-radius:8px}.cp-row:hover{background:#8881}.cp-row label{display:flex;align-items:flex-start;gap:8px;flex:1;cursor:pointer;min-width:0}.cp-row input{margin:3px 0}.cp-row strong{font-size:12px;display:block}.cp-row small{font-size:10px;opacity:.65;display:block;white-space:pre-wrap;overflow-wrap:anywhere}.cp-row .cp-edit{padding:3px 6px!important}.cp-footer{padding:10px 12px;border-top:1px solid #8883;display:grid;grid-template-columns:1fr 1fr;gap:7px}.cp-primary{background:var(--vscode-button-background,#6654aa)!important;color:var(--vscode-button-foreground,#fff)!important}.cp-wide{grid-column:1/-1}.cp-meta{display:flex;gap:7px;justify-content:space-between;font-size:10px}.cp-empty{padding:18px;text-align:center;opacity:.65}
     #context-pouch-panel input:not([type=checkbox]),#context-pouch-panel select,#context-pouch-panel textarea{width:100%;border:1px solid #8884;border-radius:7px;padding:7px;background:var(--vscode-input-background,#292a35)}.cp-dialog{display:none;padding:12px;overflow:auto;max-height:calc(100vh - 90px)}.cp-dialog.open{display:block}.cp-dialog label{display:block;margin:8px 0}.cp-dialog label>span{display:block;font-size:10px;opacity:.7;margin-bottom:4px}.cp-dialog textarea{resize:vertical;min-height:120px}.cp-dialog pre{font:11px/1.5 monospace;white-space:pre-wrap;overflow-wrap:anywhere;max-height:260px;overflow:auto;padding:10px;background:#8881;border-radius:8px}.cp-dialog .cp-actions{padding:10px 0 0;border:0;flex-wrap:wrap}.cp-error{font-size:11px;padding:8px 12px;color:var(--vscode-errorForeground,#ff9e9e);white-space:pre-wrap}.cp-hidden{display:none!important}
-    #context-pouch-panel{width:min(340px,calc(100vw - 24px));max-height:calc(100vh - 24px)}
+    #context-pouch-panel{box-sizing:border-box;width:min(340px,calc(100vw - 24px));max-height:calc(100vh - 24px)}
     .cp-main{display:flex;flex-direction:column;min-height:0;overflow:hidden}.cp-list{min-height:0;flex:1;max-height:260px}.cp-head,.cp-tools,.cp-footer{flex-shrink:0}.cp-error:empty{display:none}
     .cp-mode{display:flex;gap:3px;padding:0 12px 10px}.cp-mode button{flex:1;border:0!important;font-size:11px!important;color:var(--vscode-descriptionForeground,#aaa)!important}.cp-mode button[aria-pressed=true]{background:#9980de24!important;color:var(--vscode-foreground,#eee)!important}
     #context-pouch-panel:not(.advanced) .cp-advanced{display:none!important}#context-pouch-panel:not(.advanced) .cp-row small,#context-pouch-panel:not(.advanced) .cp-edit{display:none}#context-pouch-panel:not(.advanced) .cp-footer{grid-template-columns:1fr}#context-pouch-panel:not(.advanced) .cp-row{padding:7px 8px}#context-pouch-panel:not(.advanced) .cp-row strong{font-weight:500}.cp-head{border-bottom:0;padding-bottom:8px}.cp-tools{padding-top:0}.cp-meta{flex-wrap:wrap}.cp-dialog{min-height:0;flex:1}.cp-row label>span{overflow-wrap:anywhere}.cp-count{white-space:nowrap}
+  `;
+  style.textContent += `
+    #context-pouch-panel .cp-mode{flex-shrink:0}
+    #context-pouch-panel.advanced .cp-main{overflow:auto;flex:1;min-height:0}
+    #context-pouch-panel.advanced .cp-list{flex:1 0 140px;max-height:340px;overflow:auto}
+    #context-pouch-panel.advanced .cp-advanced{visibility:visible}
+    #context-pouch-panel.advanced .cp-row small{display:block}
+    #context-pouch-panel.advanced .cp-edit{display:inline-block}
+    #context-pouch-panel.advanced .cp-tools{padding-top:6px;border-top:1px solid #8883}
+    #context-pouch-panel.advanced .cp-footer{position:sticky;bottom:0;background:var(--vscode-editorWidget-background,#20212b);flex-shrink:0}
+    #context-pouch-panel.advanced .cp-meta button{font-size:10px}
   `;
   document.documentElement.appendChild(style);
   const button = document.createElement("button");
@@ -52,7 +63,13 @@
   button.setAttribute("aria-controls", panel.id);
   button.setAttribute("aria-expanded", "false");
   panel.innerHTML = `<div class="cp-head"><strong>Pouch</strong><span class="cp-count"></span><button data-action="graph" title="Open rule graph in a new tab" aria-label="Open rule graph">Graph ↗</button><button data-action="close" aria-label="Close Pouch">×</button></div><div class="cp-mode" aria-label="Pouch mode"><button data-action="simple" aria-pressed="true">Simple</button><button data-action="advanced" aria-pressed="false">Advanced</button></div><div class="cp-error" role="status"></div><div class="cp-main"><div class="cp-tools"><input class="cp-search" aria-label="Search rules" placeholder="Find a rule…"><div class="cp-advanced"><select class="cp-scope" aria-label="Filter by library"><option value="all">All libraries</option></select><select class="cp-category" aria-label="Filter by category"><option value="all">All categories</option></select></div><div><select class="cp-preset" aria-label="Task preset"><option value="">Choose a preset…</option></select><button class="cp-advanced" data-action="preset">Save preset</button></div></div><div class="cp-list"></div><div class="cp-footer"><button class="cp-primary" data-action="preview">Review selected rules</button><button class="cp-advanced" data-action="reinforce">Reinforce selected</button><div class="cp-wide cp-meta cp-advanced"><button data-action="add">+ Rule</button><button data-action="clear">Clear selection</button><button data-action="remove">Remove draft block</button></div></div></div><div class="cp-dialog"></div>`;
+  let resizingAnimation;
   function setMode(next) {
+    const before = panel.classList.contains("open")
+      ? panel.getBoundingClientRect()
+      : null;
+    resizingAnimation?.cancel();
+    openingAnimation?.cancel();
     advanced = next;
     panel.classList.toggle("advanced", advanced);
     panel
@@ -74,6 +91,33 @@
     } catch (_) {}
     render();
     position();
+    if (before && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      const after = panel.getBoundingClientRect();
+      resizingAnimation = panel.animate(
+        [
+          {
+            width: `${before.width}px`,
+            height: `${before.height}px`,
+            left: `${before.left}px`,
+            top: `${before.top}px`,
+          },
+          {
+            width: `${after.width}px`,
+            height: `${after.height}px`,
+            left: `${after.left}px`,
+            top: `${after.top}px`,
+          },
+        ],
+        { duration: 240, easing: "cubic-bezier(.2,.8,.2,1)" },
+      );
+      resizingAnimation.finished.then(
+        () => {
+          resizingAnimation = null;
+          position();
+        },
+        () => {},
+      );
+    }
   }
   let openingAnimation;
   const connector = document.createElementNS(
@@ -91,6 +135,7 @@
     '#context-pouch-button[aria-expanded="true"]{border-color:var(--vscode-focusBorder,#aa94df);box-shadow:0 0 0 3px #aa94df20}';
   function dismiss(restoreFocus = false) {
     openingAnimation?.cancel();
+    resizingAnimation?.cancel();
     connector.style.display = "none";
     panel.classList.remove("open");
     button.setAttribute("aria-expanded", "false");
@@ -149,7 +194,11 @@
       Math.max(8, Math.min(innerWidth - 38, r.right - 31)) + "px";
     button.style.top =
       Math.max(8, Math.min(innerHeight - 38, r.top - 35)) + "px";
-    if (!panel.classList.contains("open")) return;
+    if (
+      !panel.classList.contains("open") ||
+      resizingAnimation?.playState === "running"
+    )
+      return;
     const gap = 16,
       margin = 12;
     // Include the composer shell's padding when choosing an outside margin.
@@ -167,27 +216,39 @@
       !useRight && leftRoom >= 280 && anchor.left - leftEdge < 180;
     const docked = useRight || useLeft;
     const panelWidth = Math.min(
-      advanced ? 340 : 300,
+      advanced ? 410 : 300,
       docked
         ? useRight
           ? rightRoom
           : leftRoom
-        : Math.max(260, innerWidth * 0.42),
+        : advanced
+          ? innerWidth - margin * 2
+          : Math.max(260, innerWidth * 0.42),
       innerWidth - margin * 2,
     );
     panel.style.width = panelWidth + "px";
     panel.style.maxHeight =
       Math.max(
         140,
-        Math.min(innerHeight - 24, docked ? 560 : innerHeight * 0.48),
+        Math.min(
+          innerHeight - 24,
+          advanced ? 660 : docked ? 500 : innerHeight * 0.48,
+        ),
       ) + "px";
     const above = anchor.top - margin - 12;
     const below = innerHeight - anchor.bottom - margin - 12;
     const openAbove = above >= below;
     if (!docked)
       panel.style.maxHeight =
-        Math.max(100, Math.min(innerHeight * 0.48, openAbove ? above : below)) +
-        "px";
+        Math.max(
+          100,
+          Math.min(
+            advanced ? 660 : innerHeight * 0.48,
+            openAbove ? above : below,
+          ),
+        ) + "px";
+    // Advanced is a full workspace, not a content-sized compact picker.
+    panel.style.height = advanced ? panel.style.maxHeight : "auto";
     panel.dataset.placement = docked
       ? useRight
         ? "right"

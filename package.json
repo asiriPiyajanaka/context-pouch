@@ -2,7 +2,7 @@
   "name": "context-pouch-codex",
   "displayName": "Context Pouch for Codex",
   "description": "Reusable Codex constraints with project libraries, presets, portable packs, and an interactive rule graph.",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "publisher": "asiri-local",
   "engines": {
     "vscode": "^1.95.0"
