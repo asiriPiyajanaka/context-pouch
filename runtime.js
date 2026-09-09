@@ -30,12 +30,33 @@
     #context-pouch-button{position:fixed;z-index:2147483600;width:30px;height:30px;display:none;align-items:center;justify-content:center;border-radius:9px;border:1px solid #8885;background:var(--vscode-input-background,#282733);color:var(--vscode-foreground,#eee);cursor:pointer;padding:5px}
     #context-pouch-button svg{width:19px;height:19px}#context-pouch-panel{position:fixed;z-index:2147483601;display:none;flex-direction:column;width:min(410px,calc(100vw - 20px));max-height:calc(100vh - 24px);background:var(--vscode-editorWidget-background,#20212b);color:var(--vscode-foreground,#eee);border:1px solid #8885;border-radius:14px;box-shadow:0 16px 44px #0006;font:12px/1.45 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow:hidden}
     #context-pouch-panel.open{display:flex}#context-pouch-panel *{box-sizing:border-box}#context-pouch-panel button,#context-pouch-panel input,#context-pouch-panel select,#context-pouch-panel textarea{font:inherit;color:inherit}#context-pouch-panel button{cursor:pointer;border:1px solid #8884;border-radius:7px;background:transparent;padding:6px 9px}#context-pouch-panel button:hover{background:#8882}#context-pouch-panel button:disabled{opacity:.4;cursor:default}#context-pouch-panel :focus-visible{outline:2px solid var(--vscode-focusBorder,#a798ed);outline-offset:2px}
-    .cp-head,.cp-actions{display:flex;gap:7px;align-items:center;padding:11px 12px;border-bottom:1px solid #8883}.cp-head strong{flex:1}.cp-count{font-size:10px;opacity:.65}.cp-tools{padding:10px 12px;display:grid;gap:7px}.cp-tools>div{display:flex;gap:7px}.cp-tools select{min-width:0;flex:1}.cp-list{overflow:auto;min-height:70px;max-height:300px;padding:0 8px 8px}.cp-row{display:flex;align-items:flex-start;gap:7px;padding:8px;border-radius:8px}.cp-row:hover{background:#8881}.cp-row label{display:flex;align-items:flex-start;gap:8px;flex:1;cursor:pointer;min-width:0}.cp-row input{margin:3px 0}.cp-row strong{font-size:12px;display:block}.cp-row small{font-size:10px;opacity:.65;display:block;white-space:pre-wrap;overflow-wrap:anywhere}.cp-row .cp-edit{padding:3px 6px!important}.cp-footer{padding:10px 12px;border-top:1px solid #8883;display:grid;grid-template-columns:1fr 1fr;gap:7px}.cp-primary{background:var(--vscode-button-background,#6654aa)!important;color:var(--vscode-button-foreground,#fff)!important}.cp-wide{grid-column:1/-1}.cp-meta{display:flex;gap:7px;justify-content:space-between;font-size:10px}.cp-empty{padding:18px;text-align:center;opacity:.65}
+    .cp-head,.cp-actions{display:flex;gap:7px;align-items:center;padding:11px 12px;border-bottom:1px solid #8883}.cp-head strong{flex:1}.cp-count{font-size:10px;opacity:.65}.cp-tools{padding:10px 12px;display:grid;gap:7px}.cp-tools>div{display:flex;gap:7px}.cp-tools select{min-width:0;flex:1}.cp-chooser{display:flex;gap:7px;align-items:center}.cp-chooser input{flex:1;min-width:0}.cp-chooser .cp-preset{max-width:42%;font-size:11px}.cp-list{overflow:auto;min-height:70px;max-height:300px;padding:0 8px 8px}.cp-row{display:flex;align-items:flex-start;gap:7px;padding:8px;border-radius:8px}.cp-row:hover{background:#8881}.cp-row label{display:flex;align-items:flex-start;gap:8px;flex:1;cursor:pointer;min-width:0}.cp-row input{margin:3px 0}.cp-row strong{font-size:12px;display:block}.cp-row small{font-size:10px;opacity:.65;display:block;white-space:pre-wrap;overflow-wrap:anywhere}.cp-row .cp-edit{padding:3px 6px!important}.cp-footer{padding:10px 12px;border-top:1px solid #8883;display:grid;grid-template-columns:1fr 1fr;gap:7px}.cp-primary{background:var(--vscode-button-background,#6654aa)!important;color:var(--vscode-button-foreground,#fff)!important}.cp-wide{grid-column:1/-1}.cp-meta{display:flex;gap:7px;justify-content:space-between;font-size:10px}.cp-empty{padding:18px;text-align:center;opacity:.65}
     #context-pouch-panel input:not([type=checkbox]),#context-pouch-panel select,#context-pouch-panel textarea{width:100%;border:1px solid #8884;border-radius:7px;padding:7px;background:var(--vscode-input-background,#292a35)}.cp-dialog{display:none;padding:12px;overflow:auto;max-height:calc(100vh - 90px)}.cp-dialog.open{display:block}.cp-dialog label{display:block;margin:8px 0}.cp-dialog label>span{display:block;font-size:10px;opacity:.7;margin-bottom:4px}.cp-dialog textarea{resize:vertical;min-height:120px}.cp-dialog pre{font:11px/1.5 monospace;white-space:pre-wrap;overflow-wrap:anywhere;max-height:260px;overflow:auto;padding:10px;background:#8881;border-radius:8px}.cp-dialog .cp-actions{padding:10px 0 0;border:0;flex-wrap:wrap}.cp-error{font-size:11px;padding:8px 12px;color:var(--vscode-errorForeground,#ff9e9e);white-space:pre-wrap}.cp-hidden{display:none!important}
     #context-pouch-panel{box-sizing:border-box;width:min(340px,calc(100vw - 24px));max-height:calc(100vh - 24px)}
     .cp-main{display:flex;flex-direction:column;min-height:0;overflow:hidden}.cp-list{min-height:0;flex:1;max-height:260px}.cp-head,.cp-tools,.cp-footer{flex-shrink:0}.cp-error:empty{display:none}
     .cp-mode{display:flex;gap:3px;padding:0 12px 10px}.cp-mode button{flex:1;border:0!important;font-size:11px!important;color:var(--vscode-descriptionForeground,#aaa)!important}.cp-mode button[aria-pressed=true]{background:#9980de24!important;color:var(--vscode-foreground,#eee)!important}
-    #context-pouch-panel:not(.advanced) .cp-advanced{display:none!important}#context-pouch-panel:not(.advanced) .cp-row small,#context-pouch-panel:not(.advanced) .cp-edit{display:none}#context-pouch-panel:not(.advanced) .cp-footer{grid-template-columns:1fr}#context-pouch-panel:not(.advanced) .cp-row{padding:7px 8px}#context-pouch-panel:not(.advanced) .cp-row strong{font-weight:500}.cp-head{border-bottom:0;padding-bottom:8px}.cp-tools{padding-top:0}.cp-meta{flex-wrap:wrap}.cp-dialog{min-height:0;flex:1}.cp-row label>span{overflow-wrap:anywhere}.cp-count{white-space:nowrap}
+    #context-pouch-panel:not(.advanced) .cp-advanced{display:none!important}#context-pouch-panel:not(.advanced) .cp-row small,#context-pouch-panel:not(.advanced) .cp-edit{display:none}#context-pouch-panel:not(.advanced) .cp-footer{grid-template-columns:auto auto 1fr}#context-pouch-panel:not(.advanced) .cp-row{padding:7px 8px}#context-pouch-panel:not(.advanced) .cp-row strong{font-weight:500}#context-pouch-panel:not(.advanced) .cp-action-label{display:none}#context-pouch-panel:not(.advanced) .cp-action-icon{grid-column:auto;width:36px;padding:6px!important;font-size:16px}.cp-head{border-bottom:0;padding-bottom:8px}.cp-tools{padding-top:0}.cp-meta{flex-wrap:wrap}.cp-dialog{min-height:0;flex:1}.cp-row label>span{overflow-wrap:anywhere}.cp-count{white-space:nowrap}
+    #context-pouch-panel.advanced .cp-simple-only{display:none!important}
+    #context-pouch-panel:not(.advanced) .cp-tools>.cp-project,#context-pouch-panel:not(.advanced) .cp-chooser,#context-pouch-panel:not(.advanced) .cp-filters{display:none}
+    #context-pouch-panel:not(.advanced).cp-show-project .cp-project{display:block}
+    #context-pouch-panel:not(.advanced).cp-show-search .cp-chooser,#context-pouch-panel:not(.advanced).cp-show-preset .cp-chooser{display:flex}
+    #context-pouch-panel:not(.advanced):not(.cp-show-search) .cp-search,#context-pouch-panel:not(.advanced):not(.cp-show-preset) .cp-preset{display:none}
+    #context-pouch-panel:not(.advanced) .cp-chooser .cp-preset{max-width:none}
+    #context-pouch-panel:not(.advanced).cp-show-filters .cp-filters{display:flex!important}
+    #context-pouch-panel:not(.advanced) .cp-footer{grid-template-columns:1fr}
+    #context-pouch-panel:not(.advanced) .cp-footer>.cp-action-icon,#context-pouch-panel:not(.advanced) [data-action=preview]{display:none}
+    #context-pouch-panel:not(.advanced) .cp-list{max-height:420px}
+    #context-pouch-panel:not(.advanced) .cp-row{min-height:36px;align-items:center}
+    #context-pouch-panel:not(.advanced) .cp-rule-state{display:none}
+    #context-pouch-panel:not(.advanced) .cp-row input:disabled+span{opacity:.5}
+    #context-pouch-panel:not(.advanced) .cp-head [data-action=graph]{font-size:0}
+    #context-pouch-panel:not(.advanced) .cp-head [data-action=graph]::after{content:"↗";font-size:16px}
+    .cp-simple-toolbar{align-items:center}.cp-simple-toolbar span{flex:1;font-weight:600}
+    .cp-simple-toolbar button{width:30px;height:30px;padding:5px!important;display:flex;align-items:center;justify-content:center}
+    .cp-simple-toolbar svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+    .cp-simple-toolbar button[aria-expanded=true],.cp-simple-toolbar button[data-active=true]{background:#9980de24!important;border-color:var(--vscode-focusBorder,#a798ed)!important}
+    .cp-more{display:block;width:100%;margin-top:6px}
+
   `;
   style.textContent += `
     #context-pouch-panel .cp-mode{flex-shrink:0}
@@ -63,7 +84,10 @@
   panel.setAttribute("aria-modal", "false");
   button.setAttribute("aria-controls", panel.id);
   button.setAttribute("aria-expanded", "false");
-  panel.innerHTML = `<div class="cp-head"><strong>Pouch</strong><span class="cp-count"></span><button data-action="graph" title="Open rule library in a new tab" aria-label="Open rule library">Library ↗</button><button data-action="close" aria-label="Close Pouch">×</button></div><div class="cp-mode" aria-label="Pouch mode"><button data-action="simple" aria-pressed="true">Simple</button><button data-action="advanced" aria-pressed="false">Advanced</button></div><div class="cp-error" role="status"></div><div class="cp-main"><div class="cp-tools"><select class="cp-project" aria-label="Active project"></select><input class="cp-search" aria-label="Search rules" placeholder="Find a rule…"><div class="cp-advanced"><select class="cp-scope" aria-label="Filter by library"><option value="all">All libraries</option></select><select class="cp-category" aria-label="Filter by category"><option value="all">All categories</option></select></div><div><select class="cp-preset" aria-label="Task preset"><option value="">Choose a preset…</option></select><button class="cp-advanced" data-action="preset">Save preset</button></div></div><div class="cp-list"></div><div class="cp-footer"><button class="cp-wide" data-action="generate">Generate rules from project</button><button class="cp-primary" data-action="preview">Review selected rules</button><button class="cp-advanced" data-action="reinforce">Reinforce selected</button><div class="cp-wide cp-meta cp-advanced"><button data-action="add">+ Rule</button><button data-action="clear">Clear selection</button><button data-action="save-defaults">Save defaults</button><button data-action="restore-defaults">Restore defaults</button></div></div></div><div class="cp-dialog"></div>`;
+  panel.innerHTML = `<div class="cp-head"><strong>Pouch</strong><span class="cp-count"></span><button data-action="graph" title="Open rule library in a new tab" aria-label="Open rule library">Library ↗</button><button data-action="close" aria-label="Close Pouch">×</button></div><div class="cp-mode" aria-label="Pouch mode"><button data-action="simple" aria-pressed="true">Simple</button><button data-action="advanced" aria-pressed="false">Advanced</button></div><div class="cp-error" role="status"></div><div class="cp-main"><div class="cp-tools"><div class="cp-simple-toolbar cp-simple-only"><span>Rules</span>${simpleTool("project", "Choose project", '<path d="M3 6h6l2 2h10v12H3Z"/>')}${simpleTool("search", "Search rules", '<circle cx="10" cy="10" r="6"/><path d="m15 15 6 6"/>')}${simpleTool("filters", "Filter rules", '<path d="M3 6h18M6 12h12M9 18h6"/>')}${simpleTool("preset", "Choose preset", '<path d="M6 3h12v18l-6-4-6 4Z"/>')}</div><select class="cp-project" aria-label="Active project"></select><div class="cp-chooser"><input class="cp-search" aria-label="Search rules" placeholder="Find a rule or preset…"><select class="cp-preset" aria-label="Task preset"><option value="">Preset…</option></select></div><div class="cp-advanced cp-filters"><select class="cp-scope" aria-label="Filter by library"><option value="all">All libraries</option></select><select class="cp-category" aria-label="Filter by category"><option value="all">All categories</option></select></div><div class="cp-advanced"><button data-action="preset">Save preset</button></div></div><div class="cp-list"></div><div class="cp-footer"><button class="cp-primary cp-simple-only" data-action="inject" title="Insert selected rules into your draft">Inject selected rules</button><button class="cp-action-icon" data-action="generate" title="Generate rules from project" aria-label="Generate rules from project"><span aria-hidden="true">✦</span><span class="cp-action-label">Generate rules from project</span></button><button class="cp-primary" data-action="preview"><span aria-hidden="true">✓ </span>Review selected rules</button><button class="cp-advanced" data-action="reinforce">Reinforce selected</button><div class="cp-wide cp-meta cp-advanced"><button data-action="add">+ Rule</button><button data-action="clear">Clear selection</button><button data-action="save-defaults">Save defaults</button><button data-action="restore-defaults">Restore defaults</button></div></div></div><div class="cp-dialog"></div>`;
+  function simpleTool(name, label, paths) {
+    return `<button data-action="tool-${name}" title="${label}" aria-label="${label}" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true">${paths}</svg></button>`;
+  }
   let resizingAnimation;
   function setMode(next) {
     const before = panel.classList.contains("open")
@@ -233,7 +257,7 @@
         140,
         Math.min(
           innerHeight - 24,
-          advanced ? 660 : docked ? 500 : innerHeight * 0.48,
+          advanced ? 660 : 620,
         ),
       ) + "px";
     const above = anchor.top - margin - 12;
@@ -244,7 +268,7 @@
         Math.max(
           100,
           Math.min(
-            advanced ? 660 : innerHeight * 0.48,
+            advanced ? 660 : 620,
             openAbove ? above : below,
           ),
         ) + "px";
@@ -295,9 +319,10 @@
   }
 
   let globalOpen = false;
+  let simpleLimit = 10;
   function render() {
     if (!state) {
-      for (const action of ["preview", "reinforce", "preset"])
+      for (const action of ["preview", "reinforce", "preset", "inject"])
         panel.querySelector(`[data-action="${action}"]`).disabled = true;
       panel.querySelector(".cp-list").innerHTML =
         '<div class="cp-empty">Connecting to your library…</div>';
@@ -348,12 +373,20 @@
     const row = r => `<div class="cp-row"><label title="${esc(r.text)}"><input type="checkbox" data-key="${esc(r.key)}" ${state.wanted.includes(r.key) ? "checked" : ""} ${r.disabledHere || r.overriddenBy ? "disabled" : ""}><span><strong>${esc(r.title)}</strong><small>${esc(r.text)}</small><small>${esc(r.category)}${r.appliesTo && r.appliesTo !== "." ? " · " + esc(r.appliesTo) + "/" : ""}</small><span class="cp-rule-state">${r.isDefault ? "Default · " : ""}${r.disabledHere ? "Disabled here" : r.overriddenBy ? "Overridden here" : state.selected.includes(r.key) ? "Selected" : ""}</span></span></label><button class="cp-edit" data-action="edit" data-key="${esc(r.key)}" aria-label="Edit ${esc(r.title)}">✎</button></div>`;
     const projectRules = shown.filter(r=>r.scope==="project");
     const globalRules = shown.filter(r=>r.scope==="personal");
-    panel.querySelector(".cp-list").innerHTML = `<div class="cp-library-label">Project rules</div>${projectRules.map(row).join("") || '<div class="cp-empty">No matching project rules.</div>'}<details class="cp-globals" ${globalOpen ? "open" : ""}><summary>Global rules · ${state.rules.filter(r=>r.scope==="personal" && state.selected.includes(r.key)).length} active</summary>${globalRules.map(row).join("") || '<div class="cp-empty">No matching global rules.</div>'}</details>`;
-    panel.querySelector(".cp-globals").addEventListener("toggle", e=>{globalOpen=e.target.open;position();});
+    const listElement = panel.querySelector(".cp-list");
+    listElement.innerHTML = `<div class="cp-library-label">Project rules</div>${projectRules.map(row).join("") || '<div class="cp-empty">No matching project rules.</div>'}<details class="cp-globals" ${globalOpen ? "open" : ""}><summary>Global rules · ${state.rules.filter(r=>r.scope==="personal" && state.selected.includes(r.key)).length} active</summary>${globalRules.map(row).join("") || '<div class="cp-empty">No matching global rules.</div>'}</details>`;
+    if (!advanced) {
+      const rules = [...projectRules, ...globalRules];
+      listElement.innerHTML = rules.slice(0, simpleLimit).map(row).join("") || '<div class="cp-empty">No matching rules.</div>';
+      if (rules.length > simpleLimit) listElement.innerHTML += `<button class="cp-more" data-action="more-rules">Show more (${rules.length - simpleLimit} remaining)</button>`;
+      for (const [name, active] of Object.entries({ search: Boolean(search), filters: filter !== "all" || scope.value !== "all" }))
+        panel.querySelector(`[data-action="tool-${name}"]`).dataset.active = String(active);
+    }
+    panel.querySelector(".cp-globals")?.addEventListener("toggle", e=>{globalOpen=e.target.open;position();});
     panel.querySelector('[data-action="save-defaults"]').disabled = !state.scopes.some(s=>s.id==="project" && s.writable);
     panel.querySelector(".cp-count").textContent =
       `${state.selected.length} selected`;
-    for (const a of ["preview", "reinforce", "preset"])
+    for (const a of ["preview", "reinforce", "preset", "inject"])
       panel.querySelector(`[data-action="${a}"]`).disabled =
         !state.selected.length;
     panel.querySelector('[data-action="generate"]').disabled =
@@ -430,6 +463,7 @@
   panel.addEventListener("input", (e) => {
     if (e.target.matches(".cp-search")) {
       search = e.target.value;
+      simpleLimit = 10;
       render();
     }
   });
@@ -462,9 +496,27 @@
         dismiss(true);
       } else if (action === "simple" || action === "advanced")
         setMode(action === "advanced");
+      else if (action.startsWith("tool-")) {
+        const name = action.slice(5);
+        const open = panel.classList.toggle(`cp-show-${name}`);
+        el.setAttribute("aria-expanded", String(open));
+        if (open) panel.querySelector(name === "filters" ? ".cp-scope" : `.cp-${name}`).focus();
+        position();
+      } else if (action === "more-rules") {
+        simpleLimit += 10;
+        render();
+        panel.querySelectorAll(".cp-row input")[simpleLimit - 10]?.focus();
+      }
       else if (action === "cancel") closeDialog();
       else if (action === "graph") await request("graph");
       else if (!state || busy) return;
+      else if (action === "inject") {
+        const revision = state.revision;
+        await request("state");
+        if (state.revision !== revision) throw new Error("Your project or rules changed. Check the selection and inject again.");
+        if (state.activeConflicts.length) throw new Error("Selected rules have confirmed conflicts. Open the library and deselect one side before inserting.");
+        if (state.selected.length) insertInstructions(M.payload(picked(), "inject"));
+      }
       else if (action === "generate") { dismiss(); await request("generate"); }
       else if (action === "save-defaults") await request("saveDefaults");
       else if (action === "restore-defaults") await request("restoreDefaults");
@@ -524,6 +576,7 @@
     panel.classList.add("open");
     button.setAttribute("aria-expanded", "true");
     if (panel.classList.contains("open")) {
+      simpleLimit = 10;
       request("state").catch(() => {});
       render();
       position();
@@ -539,7 +592,8 @@
       }
       (
         panel.querySelector(".cp-dialog.open input, .cp-dialog.open button") ||
-        panel.querySelector(".cp-search")
+        panel.querySelector(advanced ? ".cp-search" : ".cp-row input:not(:disabled)") ||
+        panel.querySelector('[data-action="tool-search"]')
       ).focus();
     }
   });

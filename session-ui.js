@@ -3,8 +3,10 @@
     const footer = panel.querySelector(".cp-footer");
     let draft = null;
     const action = document.createElement("button");
-    action.textContent = "Correct running session";
-    action.className = "cp-wide";
+    action.innerHTML = '<span aria-hidden="true">◌</span><span class="cp-action-label">Correct running session</span>';
+    action.className = "cp-action-icon cp-session-action";
+    action.title = "Correct running session";
+    action.setAttribute("aria-label", "Correct running session");
     footer.append(action);
     const status = document.createElement("div");
     status.className = "cp-wide";
