@@ -9,7 +9,11 @@ function fixture() {
   const children = [], errors = [], sent = [], listeners = new Map();
   const controls = {
     ".cp-footer": { append: node => children.push(node), prepend: node => children.unshift(node) },
-    ".cp-send-correction": {},
+    ".cp-send-correction": { focus() {} },
+    ".cp-correction-confirmation": { hidden: true },
+    ".cp-confirm-correction": { focus() {} },
+    ".cp-cancel-correction": {},
+    ".cp-confirm-message": {},
     ".cp-correction-text": { value: "Use the shared Button; replace the duplicate." },
     ".cp-correction-mode": { value: "now" },
   };
@@ -34,7 +38,10 @@ function fixture() {
     error: text => errors.push(text),
   });
   return { children, controls, errors, sent, session, window, listeners,
-    open: () => children[0].onclick(), send: () => controls[".cp-send-correction"].onclick(),
+    open: () => children[0].onclick(),
+    beginSend: () => controls[".cp-send-correction"].onclick(),
+    confirm: () => controls[".cp-confirm-correction"].onclick(),
+    send: () => { controls[".cp-send-correction"].onclick(); return controls[".cp-confirm-correction"].onclick(); },
     html: () => html, closed: () => closed,
     setState: value => { state = value; }, setRequest: fn => { request = fn; } };
 }
@@ -102,4 +109,25 @@ test("delivery status disables duplicate actions and offers queue cancellation",
   f.session.cancel = () => { cancelled = true; };
   f.children[2].onclick();
   assert.equal(cancelled, true);
+});
+
+test("live corrections require confirmation and cancelling preserves the draft", async () => {
+  for (const mode of ["now", "after", "stop"]) {
+    const f = fixture();
+    f.open();
+    f.controls[".cp-correction-mode"].value = mode;
+    f.beginSend();
+    assert.equal(f.sent.length, 0);
+    assert.equal(f.controls[".cp-correction-confirmation"].hidden, false);
+    assert.match(f.controls[".cp-confirm-message"].textContent, /Button task/);
+    f.controls[".cp-cancel-correction"].onclick();
+    await f.confirm();
+    assert.equal(f.sent.length, 0);
+    assert.equal(f.controls[".cp-correction-confirmation"].hidden, true);
+    assert.equal(f.controls[".cp-correction-text"].value, "Use the shared Button; replace the duplicate.");
+    f.beginSend();
+    await f.confirm();
+    assert.equal(f.sent.length, 1);
+    assert.equal(f.sent[0][1], mode);
+  }
 });
