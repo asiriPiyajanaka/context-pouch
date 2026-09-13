@@ -44,3 +44,19 @@ test("new global defaults remain in saved project defaults until explicitly excl
   assert.deepEqual(result.defaults,[g,p]);
   assert.deepEqual(result.selected,[p]);
 });
+test("selected-only filters use effective rules and searches reveal global matches",()=>{
+  const state=fixture(), V=view();
+  const selected=V.list(state,null,"","",false,true);
+  assert.match(selected,/Project 300/);
+  assert.doesNotMatch(selected,/Global 500/);
+  const searched=V.list(state,null,"Global","",false);
+  assert.match(searched,/<details class="global-section" open>/);
+  assert.match(searched,/Global 500/);
+});
+test("rule management is progressively disclosed with an accessible return action",()=>{
+  const state=fixture(), html=view().inspector(state,state.rules[1].key);
+  assert.match(html,/aria-label="Back to rules"/);
+  assert.match(html,/Edit saved rule/);
+  assert.match(html,/<details class="detail-section" data-detail-section="defaults"><summary>/);
+  assert.match(html,/<details class="detail-section" data-detail-section="relationships"><summary>/);
+});

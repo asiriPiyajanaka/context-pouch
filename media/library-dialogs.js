@@ -55,6 +55,12 @@
       const state=getState();
       show("Preview active instructions",`${state.activeConflicts.length ? '<p class="notice">Selected rules have confirmed conflicts. Deselect one side before inserting.</p>' : ""}<p class="muted">Project rules first. Disabled and overridden global rules are excluded.</p><pre>${esc(state.instructions || "No rules selected.")}</pre>`,async()=>{},"Done");
     }
-    return {rule,preset,pack,relationship,preview};
+    function defaults() {
+      show("Save project defaults",'<p>Remember the current saved rule selection for this project. Unselected global defaults will be disabled here. Draft-only edits in the composer are not saved.</p>',revision=>request("saveDefaults",{revision}),"Save project defaults");
+    }
+    function applyPreset(preset) {
+      show("Apply preset",`<p>Replace the current selection with “${esc(preset.title)}”? Saved defaults stay unchanged.</p>`,revision=>request("select",{revision,keys:preset.ruleIds.map(id=>window.ContextPouchModel.key(preset.scope,id))}),"Apply preset");
+    }
+    return {rule,preset,pack,relationship,preview,defaults,applyPreset};
   };
 })();

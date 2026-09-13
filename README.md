@@ -4,6 +4,8 @@ A project-first rule library beside the Codex composer, with a brass-and-black i
 
 ## Use the library
 
+The Library keeps Rules, Presets, and Graph in separate views. Rules provides search, category and selected-only filters; checkboxes select instructions while titles open their details. Defaults, sources, and relationships expand when needed. In a narrow pane, Back to rules returns to the list with keyboard focus restored. The bottom bar keeps selection review available. Tools contains project defaults and import/export actions; presets and saving project defaults explain their effects before applying.
+
 Open **Library ↗** beside the composer, run **Context Pouch: Open Rule Library**, or press **Cmd+Alt+P** (Windows/Linux: **Ctrl+Alt+P**).
 
 - Choose the active project at the top. Projects are identified by folder URI, not display name; separate folders with identical names remain separate libraries. Moving a repository to a different path creates a new project identity; use a JSON export/import to transfer its rules.
