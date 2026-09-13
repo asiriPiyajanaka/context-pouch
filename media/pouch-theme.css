@@ -1,0 +1,38 @@
+/* Pouch branding is intentionally independent of the surrounding editor theme. */
+#context-pouch-panel,#context-pouch-button,#context-pouch-connector,body.pouch-library {
+  color-scheme:dark;
+  --pouch-black:#0b0a08;
+  --pouch-surface:#14120e;
+  --pouch-raised:#201c14;
+  --pouch-brass:#b89a5b;
+  --pouch-brass-bright:#d4b777;
+  --pouch-text:#ede5d5;
+  --pouch-muted:#b6aa93;
+  --vscode-editor-background:var(--pouch-black);
+  --vscode-editorWidget-background:var(--pouch-surface);
+  --vscode-editorHoverWidget-background:var(--pouch-raised);
+  --vscode-sideBar-background:var(--pouch-surface);
+  --vscode-foreground:var(--pouch-text);
+  --vscode-descriptionForeground:var(--pouch-muted);
+  --vscode-panel-border:#b89a5b38;
+  --vscode-input-background:var(--pouch-raised);
+  --vscode-focusBorder:var(--pouch-brass-bright);
+  --vscode-button-background:var(--pouch-brass);
+  --vscode-button-foreground:var(--pouch-black);
+  --vscode-list-hoverBackground:#b89a5b1f;
+  --vscode-scrollbarSlider-background:#b89a5b55;
+  --vscode-errorForeground:#ed9c76;
+  --vscode-editorWarning-foreground:var(--pouch-brass-bright);
+}
+#context-pouch-button,#context-pouch-button:hover,#context-pouch-button:active,#context-pouch-button[aria-expanded=true] {
+  background:none!important;
+  border:0!important;
+  box-shadow:none!important;
+  border-radius:0;
+  padding:0;
+}
+#context-pouch-button img {display:block;width:100%;height:100%;object-fit:contain;pointer-events:none}
+#context-pouch-button:focus-visible {outline:2px solid var(--pouch-brass-bright);outline-offset:3px}
+#context-pouch-panel .cp-simple-toolbar button[aria-expanded=true],#context-pouch-panel .cp-simple-toolbar button[data-active=true] {
+  background:#b89a5b24!important;
+}

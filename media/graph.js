@@ -111,5 +111,17 @@
       if(action==="export-shared")await request("export",{scope:"project",shared:true});
     }catch(_){}
   });
-  rpc("state").catch(e=>status(e.message,true));
+  function focusRequested(target) {
+    if (!target?.key || target.project !== state?.project) return;
+    if (!state.rules.some(r => r.key === target.key)) return;
+    tab = "library"; focus = target.key; globalOpen = true; query = ""; category = "";
+    app.querySelector("#search").value = "";
+    render();
+    app.querySelector(".inspector").setAttribute("tabindex", "-1");
+    app.querySelector(".inspector").focus();
+  }
+  window.addEventListener("message", ({data}) => {
+    if (data?.channel === "context-pouch" && data.event === "focusRule") focusRequested(data);
+  });
+  rpc("state").then(() => rpc("libraryFocus")).then(focusRequested).catch(e=>status(e.message,true));
 })();

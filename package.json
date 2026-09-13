@@ -4,6 +4,7 @@
   "description": "Project-first Codex rule libraries with global rules, defaults, overrides, and focused relationships.",
   "version": "0.3.3",
   "publisher": "asiri-local",
+  "icon": "media/logo.png",
   "engines": {
     "vscode": "^1.101.0"
   },
@@ -79,7 +80,7 @@
   },
   "scripts": {
     "test": "node --test test/*.test.js",
-    "check": "node --check session-patch.js && node --check session-bridge.js && node --check session-ui.js && node --check extension.js && node --check library.js && node --check patcher.js && node --check model.js && node --check runtime.js && node --check media/graph.js && node --check client.js && node --check host-bridge.js && node --check webview-bootstrap.js && node --check generator.js && node --check generation-ui.js && node --check sqlite-store.js && node --check rule-state.js && node --check pack-files.js && node --check media/library-view.js && node --check media/library-dialogs.js && node --check graph-snapshot.js && node --check media/graph-model.js && node --check media/graph-renderer.js && node --check media/graph-explorer.js && node --check media/graph-inspector.js",
+    "check": "node --check session-patch.js && node --check session-bridge.js && node --check session-ui.js && node --check extension.js && node --check library.js && node --check patcher.js && node --check model.js && node --check runtime.js && node --check advanced-ui.js && node --check task-draft.js && node --check task-views.js && node --check task-ui.js && node --check media/graph.js && node --check client.js && node --check host-bridge.js && node --check webview-bootstrap.js && node --check generator.js && node --check generation-ui.js && node --check sqlite-store.js && node --check rule-state.js && node --check pack-files.js && node --check media/library-view.js && node --check media/library-dialogs.js && node --check graph-snapshot.js && node --check media/graph-model.js && node --check media/graph-renderer.js && node --check media/graph-explorer.js && node --check media/graph-inspector.js",
     "package": "python3 scripts/package.py"
   },
   "license": "MIT"

@@ -1,13 +1,13 @@
-:root {
-  color-scheme: light dark;
-  --bg: var(--vscode-editor-background,#18191e);
-  --surface: var(--vscode-sideBar-background,#202128);
-  --fg: var(--vscode-foreground,#e5e5eb);
-  --muted: var(--vscode-descriptionForeground,#a4a4b2);
+body.pouch-library {
+  color-scheme: dark;
+  --bg: var(--vscode-editor-background,#0b0a08);
+  --surface: var(--vscode-sideBar-background,#14120e);
+  --fg: var(--vscode-foreground,#ede5d5);
+  --muted: var(--vscode-descriptionForeground,#b6aa93);
   --border: var(--vscode-panel-border,#ffffff20);
-  --input: var(--vscode-input-background,#292a32);
-  --focus: var(--vscode-focusBorder,#a899df);
-  --button: var(--vscode-button-background,#6752a2);
+  --input: var(--vscode-input-background,#201c14);
+  --focus: var(--vscode-focusBorder,#d4b777);
+  --button: var(--vscode-button-background,#b89a5b);
   --button-fg: var(--vscode-button-foreground,#fff);
 }
 * { box-sizing:border-box; }

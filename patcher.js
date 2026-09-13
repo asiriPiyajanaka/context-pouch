@@ -28,7 +28,8 @@ function stripExistingPatch(src) {
   return strip(src, START, END);
 }
 function runtimeSource() {
-  return `\n${START}\n${read("model.js")}\n${read("client.js")}\n${read("session-ui.js")}\n${read("runtime.js")}\n${END}\n`;
+  const logo = "data:image/png;base64," + fs.readFileSync(path.join(__dirname, "media/logo.png")).toString("base64");
+  return `\n${START}\nwindow.__contextPouchLogo = ${JSON.stringify(logo)};\n${read("model.js")}\n${read("client.js")}\n${read("session-ui.js")}\n${read("task-draft.js")}\n${read("task-views.js")}\n${read("task-ui.js")}\n${read("advanced-ui.js")}\n(() => { const style = document.createElement("style"); style.id = "context-pouch-advanced-style"; style.textContent = ${JSON.stringify(read("media/pouch-theme.css") + "\n" + read("advanced-ui.css"))}; document.documentElement.appendChild(style); })();\n${read("runtime.js")}\n${END}\n`;
 }
 function resolveTargets(ext) {
   if (!ext)

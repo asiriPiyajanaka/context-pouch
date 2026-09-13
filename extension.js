@@ -67,11 +67,12 @@ function graphHtml(webview, extensionUri) {
   const nonce = crypto.randomBytes(18).toString("base64");
   const resource = (file) =>
     webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, file));
-  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src 'nonce-${nonce}'; img-src ${webview.cspSource} data:;"><link rel="stylesheet" href="${resource("media/graph.css")}"><link rel="stylesheet" href="${resource("media/node-graph.css")}"><title>Pouch · Rule library</title></head><body><div id="app"></div><script nonce="${nonce}" src="${resource("model.js")}"></script><script nonce="${nonce}" src="${resource("client.js")}"></script><script nonce="${nonce}" src="${resource("media/library-view.js")}"></script><script nonce="${nonce}" src="${resource("media/library-dialogs.js")}"></script><script nonce="${nonce}" src="${resource("media/graph-model.js")}"></script><script nonce="${nonce}" src="${resource("media/graph-renderer.js")}"></script><script nonce="${nonce}" src="${resource("media/graph-explorer.js")}"></script><script nonce="${nonce}" src="${resource("media/graph-inspector.js")}"></script><script nonce="${nonce}" src="${resource("media/graph.js")}"></script></body></html>`;
+  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src 'nonce-${nonce}'; img-src ${webview.cspSource} data:;"><link rel="stylesheet" href="${resource("media/pouch-theme.css")}"><link rel="stylesheet" href="${resource("media/graph.css")}"><link rel="stylesheet" href="${resource("media/node-graph.css")}"><title>Pouch · Rule library</title></head><body class="pouch-library"><div id="app"></div><script nonce="${nonce}" src="${resource("model.js")}"></script><script nonce="${nonce}" src="${resource("client.js")}"></script><script nonce="${nonce}" src="${resource("media/library-view.js")}"></script><script nonce="${nonce}" src="${resource("media/library-dialogs.js")}"></script><script nonce="${nonce}" src="${resource("media/graph-model.js")}"></script><script nonce="${nonce}" src="${resource("media/graph-renderer.js")}"></script><script nonce="${nonce}" src="${resource("media/graph-explorer.js")}"></script><script nonce="${nonce}" src="${resource("media/graph-inspector.js")}"></script><script nonce="${nonce}" src="${resource("media/graph.js")}"></script></body></html>`;
 }
 function activate(context) {
   const clients = new Set();
   let graph;
+  let pendingRuleFocus = null;
   const broadcast = (state) => {
     for (const view of clients)
       view
@@ -95,9 +96,11 @@ function activate(context) {
         vscode.window.showErrorMessage(`Context Pouch: ${e.message}`);
       }
     };
-  function openGraph() {
+  function openGraph(target) {
+    if (target?.key) pendingRuleFocus = target;
     if (graph) {
       graph.reveal(vscode.ViewColumn.Active);
+      if (pendingRuleFocus) { graph.webview.postMessage({channel:"context-pouch",event:"focusRule",...pendingRuleFocus}); pendingRuleFocus = null; }
       return;
     }
     graph = vscode.window.createWebviewPanel(
@@ -113,7 +116,7 @@ function activate(context) {
     const panel = graph;
     panel.iconPath = vscode.Uri.joinPath(
       context.extensionUri,
-      "media/pouch.svg",
+      "media/logo.png",
     );
     panel.webview.html = graphHtml(panel.webview, context.extensionUri);
     panel.webview.onDidReceiveMessage(
@@ -176,8 +179,13 @@ function activate(context) {
       await generation.openSource(source);
       return null;
     }
+    if (action === "libraryFocus") {
+      const target = pendingRuleFocus; pendingRuleFocus = null; return target;
+    }
     if (action === "graph") {
-      openGraph();
+      const current = await library.dispatch("state");
+      if (data.key && (data.project !== current.project || !current.rules.some(r => r.key === data.key))) throw new Error("The project or rule changed. Try again.");
+      openGraph(data.key ? {key:data.key,project:current.project} : undefined);
       return null;
     }
     if (action === "import") {

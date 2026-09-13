@@ -32,19 +32,19 @@
 .graph-node-title { fill:var(--fg); font-size:12px; font-weight:600; pointer-events:none; }
 .graph-node-state { fill:var(--muted); font-size:10px; pointer-events:none; }
 .graph-edge path { fill:none; stroke:var(--muted); stroke-width:1.5; }
-.graph-edge.override path { stroke:var(--vscode-charts-blue,#70b6ed); stroke-width:2; }
+.graph-edge.override path { stroke:#d4b777; stroke-width:2; }
 .graph-edge.conflict path { stroke:var(--vscode-editorWarning-foreground,#d9af54); stroke-dasharray:7 5; }
 .graph-edge text { fill:var(--fg); stroke:var(--bg); stroke-width:4px; paint-order:stroke; font-size:10px; pointer-events:none; }
-#override-arrow path { fill:var(--vscode-charts-blue,#70b6ed); }
-.graph-global { --graph-color:var(--vscode-charts-purple,#b498e3); }
-.graph-palette-0 { --graph-color:var(--vscode-charts-blue,#70b6ed); }
-.graph-palette-1 { --graph-color:var(--vscode-charts-green,#87c797); }
-.graph-palette-2 { --graph-color:var(--vscode-charts-orange,#d99d70); }
-.graph-palette-3 { --graph-color:var(--vscode-charts-yellow,#d7c477); }
-.graph-palette-4 { --graph-color:var(--vscode-charts-red,#dc8e99); }
-.graph-palette-5 { --graph-color:var(--vscode-terminal-ansiCyan,#79c8cb); }
-.graph-palette-6 { --graph-color:var(--vscode-terminal-ansiMagenta,#c394c9); }
-.graph-palette-7 { --graph-color:var(--vscode-terminal-ansiBrightBlue,#879ce0); }
+#override-arrow path { fill:#d4b777; }
+.graph-global { --graph-color:#b89a5b; }
+.graph-palette-0 { --graph-color:#d4b777; }
+.graph-palette-1 { --graph-color:#b2a17a; }
+.graph-palette-2 { --graph-color:#b58142; }
+.graph-palette-3 { --graph-color:#dfc993; }
+.graph-palette-4 { --graph-color:#a77951; }
+.graph-palette-5 { --graph-color:#c1b393; }
+.graph-palette-6 { --graph-color:#94784b; }
+.graph-palette-7 { --graph-color:#e7d9b5; }
 .graph-empty { position:absolute; left:10%; right:10%; top:40%; text-align:center; color:var(--muted); pointer-events:none; }
 .graph-help { font-size:11px; color:var(--muted); margin-top:10px; }
 .graph-project-path { overflow-wrap:anywhere; font-size:11px; color:var(--muted); }

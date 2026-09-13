@@ -1,6 +1,6 @@
 # Context Pouch for Codex
 
-A project-first rule library beside the Codex composer. Keep reusable global rules, project defaults, and explicit overrides, then insert the active instructions as ordinary editable text.
+A project-first rule library beside the Codex composer, with a brass-and-black interface. Keep reusable global rules, project defaults, and explicit overrides, then insert the active instructions as ordinary editable text.
 
 ## Use the library
 
@@ -36,9 +36,17 @@ Categories and presets are not graph nodes. A searchable rule picker and regular
 
 ## Composer
 
-Click **Pouch** beside the message composer. Simple mode shows the project selector, search, presets, and grouped rule titles. Advanced adds filters, full text, editing, default controls, and reinforcement. The mode is remembered. The popup adapts to the pane, honors reduced motion, and closes with Escape or an outside click.
+Click **Pouch** beside the message composer. Normal mode provides a simple checklist with project, search, filter, and preset tools available on demand. Advanced keeps the same visual style and adds three working views:
 
-Choose **Review selected rules** or **Reinforce selected** to preview instructions before insertion. Instructions append as plain text without tracking markers. Edit or delete them directly in the composer; inserting again adds another copy. Existing draft content and attachments are preserved. Folder scope is included in instruction text. Pouch adds instructions to the prompt; it does not enforce compliance or send the message automatically.
+- **Compose:** assemble the current task selection, add rules, edit instructions for this draft, restore saved wording, or remove a rule from the task. The working selection remains above the library picker.
+- **Inspect:** see the exact text that will be inserted, included rules with their scope, disabled/overridden rules with explanations, and confirmed conflicts with actions to choose which rule to keep.
+- **Manage:** edit saved rules, change defaults, enable/disable global rules for this project, create/update presets, generate reviewed suggestions, and open a specific rule in the Library to manage overrides and conflicts.
+
+Draft-only edits are held in memory per project in the current Pouch webview. They survive switching modes and deselection, affect insertion in either mode, and never change saved rules, defaults, or presets. Reset draft edits or reload to discard them. They are not tied to a conversation: reset them when starting another task. If saved wording changes, the edit is marked so you can restore the latest saved wording. Presets store saved rule references; applying one replaces the selection. Saving defaults explains the project scope before saving.
+
+The mode is remembered. The popup adapts to the pane, honors reduced motion, and closes with Escape or an outside click.
+
+In advanced mode, choose **Review selected** to preview instructions, or **Prepare a reminder** within that review to prepare reinforcement text before insertion. Instructions append as plain text without tracking markers. Edit or delete them directly in the composer; inserting again adds another copy. Existing draft content and attachments are preserved. Folder scope is included in instruction text. Pouch adds instructions to the prompt; it does not enforce compliance or send the message automatically.
 
 ### Correct a running session
 
