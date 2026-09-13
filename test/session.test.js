@@ -30,8 +30,8 @@ function fixture() {
     conversation.latest = { turnId, status };
     for (const fn of [...callbacks]) fn(conversation);
   }
-  const capture = (id, enabled = true, owner = manager) =>
-    window.__contextPouchCaptureSession(owner, id, enabled, state => state.latest);
+  const capture = (id, enabled = true, owner = manager, retained = false) =>
+    window.__contextPouchCaptureSession(owner, id, enabled, state => state.latest, retained);
   capture("thread-1");
   return { session: window.__contextPouchSession, manager, change, capture, calls,
     callbacks, conversation, events };
@@ -174,4 +174,19 @@ test("missing, idle and ambiguous conversations expose no correction target", ()
   const missing = fixture();
   missing.manager.getConversation = () => null;
   assert.equal(missing.session.snapshot(), null);
+});
+
+
+test("multiple retained conversations block delivery and cancel queued corrections", async () => {
+  const f = fixture(), review = f.session.snapshot();
+  await f.session.deliver(review, "after", "Use shared components.");
+  f.capture("thread-2", true, f.manager, true);
+  assert.equal(f.session.snapshot(), null);
+  assert.equal(f.session.status().queued, false);
+  await assert.rejects(f.session.deliver(review, "now", "Correction"), /conversation changed/);
+  f.capture("thread-2", false, f.manager, true);
+  assert.equal(f.session.snapshot().target.id, "thread-1");
+  f.capture("thread-1", false, f.manager, true);
+  assert.equal(f.session.snapshot(), null);
+  assert.equal(f.calls.length, 0);
 });

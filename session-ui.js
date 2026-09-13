@@ -3,11 +3,11 @@
     const footer = panel.querySelector(".cp-footer");
     let draft = null;
     const action = document.createElement("button");
-    action.innerHTML = '<span aria-hidden="true">◌</span><span class="cp-action-label">Correct running session</span>';
+    action.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10a9 9 0 1 1 2 8M3 4v6h6m0 3 3 3 6-6"/></svg>';
     action.className = "cp-action-icon cp-session-action";
     action.title = "Correct running session";
     action.setAttribute("aria-label", "Correct running session");
-    footer.append(action);
+    footer.prepend(action);
     const status = document.createElement("div");
     status.className = "cp-wide";
     status.setAttribute("role", "status");

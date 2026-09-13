@@ -11,7 +11,7 @@
     window.dispatchEvent(new CustomEvent("context-pouch-session"));
   };
   const current = () => {
-    const values = [...active.values()];
+    const values = [...active.values()].flatMap(conversations => [...conversations.values()]);
     return values.length === 1 ? values[0] : null;
   };
   const turn = target => {
@@ -124,10 +124,16 @@
       } finally { sending = false; emit(message); }
     },
   };
-  window.__contextPouchCaptureSession = (manager, id, enabled, latest) => {
+  window.__contextPouchCaptureSession = (manager, id, enabled, latest, retained = false) => {
+    const conversations = active.get(manager) || new Map();
     if (enabled) {
-      if (active.get(manager)?.id !== id) active.set(manager, { manager, id, latest });
-    } else if (active.get(manager)?.id === id) active.delete(manager);
+      if (!retained && !conversations.has(id)) conversations.clear();
+      if (!conversations.has(id)) conversations.set(id, { manager, id, latest });
+      active.set(manager, conversations);
+    } else {
+      conversations.delete(id);
+      if (!conversations.size) active.delete(manager);
+    }
     if (pending && current() !== pending.target) {
       // A queue is scoped to the visible conversation, never another tab.
       cancel("Conversation changed; queued correction cancelled.");

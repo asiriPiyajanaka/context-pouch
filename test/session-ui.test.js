@@ -8,7 +8,7 @@ const M = require("../model");
 function fixture() {
   const children = [], errors = [], sent = [], listeners = new Map();
   const controls = {
-    ".cp-footer": { append: node => children.push(node) },
+    ".cp-footer": { append: node => children.push(node), prepend: node => children.unshift(node) },
     ".cp-send-correction": {},
     ".cp-correction-text": { value: "Use the shared Button; replace the duplicate." },
     ".cp-correction-mode": { value: "now" },

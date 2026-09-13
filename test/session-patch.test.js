@@ -78,3 +78,46 @@ test("session bundle external changes fail before any bundle is rewritten", t =>
   assert.throws(() => P.restoreTarget(targets.session), /changed outside/);
   Object.values(targets).forEach((file, i) => assert.deepEqual(fs.readFileSync(file), before[i]));
 });
+
+const retainedSource = managerSource.replace(
+  'setActiveConversation(e,t){this.inactiveThreadUnsubscriber.setActive(e,t),this.streamState.setConversationFollowing(e,t)}',
+  'retainActiveConversation(e){return this.assertActive(),new Subscription(this.threadStore.retainActiveConversation(e,t=>{this.inactiveThreadUnsubscriber.handleConversationActivityChanged(e,t),this.streamState.setConversationFollowing(e,t)}))}',
+);
+
+test("retained conversation hook captures activation and release without changing the subscription", () => {
+  assert.equal(S.inspect(retainedSource).retained, true);
+  assert.equal(S.inspect(retainedSource.replaceAll("e,t=>", "e,$enabled=>")
+    .replaceAll("Changed(e,t)", "Changed(e,$enabled)").replaceAll("Following(e,t)", "Following(e,$enabled)")).retained, true);
+  assert.equal(S.inspect(retainedSource + managerSource), null);
+  const captured = [], native = [];
+  vm.runInNewContext(S.patch(retainedSource, "") + `
+    const manager = new Manager();
+    manager.assertActive = () => {};
+    manager.inactiveThreadUnsubscriber = { handleConversationActivityChanged: (...args) => native.push(args) };
+    manager.streamState = { setConversationFollowing: (...args) => native.push(args) };
+    manager.threadStore = { retainActiveConversation: (id, callback) => {
+      callback(true);
+      return () => callback(false);
+    } };
+    const subscription = manager.retainActiveConversation("thread");
+    subscription.dispose();
+  `, {
+    window: { __contextPouchCaptureSession: (...args) => captured.push(args) }, native,
+    Subscription: class { constructor(dispose) { this.dispose = dispose; } },
+  });
+  assert.deepEqual(captured.map(args => [args[1], args[2], args[4]]),
+    [["thread", true, true], ["thread", false, true]]);
+  assert.equal(captured[0][3]({ turns: [{ turnId: "turn" }] }).turnId, "turn");
+  assert.equal(native.length, 4);
+  assert.deepEqual(Array.from(native[2]), ["thread", false]);
+});
+
+test("retained manager bundles can be installed, upgraded and restored", t => {
+  const { extension, targets } = fixture(t, retainedSource);
+  assert.ok(targets.session);
+  assert.equal(P.patchTargets(targets), true);
+  assert.equal(P.current(P.resolveTargets(extension)), true);
+  assert.equal(P.patchTargets(P.resolveTargets(extension)), false);
+  assert.equal(P.restoreTarget(targets.session), true);
+  assert.equal(fs.readFileSync(targets.session, "utf8"), retainedSource);
+});
