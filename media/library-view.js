@@ -43,7 +43,7 @@
   }
   function inspector(state, focus, graph = false) {
     const r = state.rules.find(r=>r.key===focus);
-    if (!r) return `<div class="empty"><h2>Your active instructions</h2><p>Select a rule to read it, set defaults, or manage relationships.</p><strong>${state.selected.length} selected</strong><p>Preview shows the exact instructions that Pouch will insert.</p>${button("preview","Preview active instructions")}</div>`;
+    if (!r) return `<div class="empty"><h2>Your active instructions</h2><p>Select a rule to read it, set defaults, or manage relationships.</p><strong>${state.selected.length} selected</strong><p>Preview shows the exact instructions that ConPin will insert.</p>${button("preview","Preview active instructions")}</div>`;
     const selection = graph ? `<label class="graph-selection"><input type="checkbox" data-select="${esc(r.key)}" ${state.wanted.includes(r.key)?"checked":""} ${r.disabledHere||r.overriddenBy?"disabled":""}>Use in prompt</label>` : button("toggle-focused",state.wanted.includes(r.key) ? "Deselect" : "Select for task",r.disabledHere || r.overriddenBy ? "disabled" : "");
     const writable = state.scopes.find(s=>s.id===r.scope)?.writable;
     const override = state.rules.find(x=>x.key===r.overriddenBy);

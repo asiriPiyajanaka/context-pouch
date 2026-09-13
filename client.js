@@ -23,7 +23,7 @@
             pending.delete(id);
             reject(
               new Error(
-                "Pouch is not connected. Run “Context Pouch: Install / Repair Codex Button” and reload VS Code.",
+                "ConPin is not connected. Run “ConPin: Install / Repair Codex Button” and reload VS Code.",
               ),
             );
           },

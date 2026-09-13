@@ -49,7 +49,7 @@
     function relationship(kind, from) {
       const candidates=getState().rules.filter(r=>r.key!==from.key && (kind!=="override" || r.scope==="personal"));
       if(!candidates.length) {status("Add another rule first.");return;}
-      show(kind === "override" ? "Override a global rule" : "Confirm a conflict",`<p>${kind === "override" ? "When this project rule is selected, the chosen global rule will be excluded from instructions." : "Mark instructions that should not be used together. Pouch will ask you to resolve an active conflict before insertion."}</p><label>Rule<select name="target">${candidates.map(r=>`<option value="${esc(r.key)}">${esc(r.title)} · ${r.scope==="personal"?"Global":"Project"}</option>`).join("")}</select></label>`,revision=>request("setRelationship",{revision,kind,from:from.key,to:value("target"),enabled:true}),"Confirm relationship");
+      show(kind === "override" ? "Override a global rule" : "Confirm a conflict",`<p>${kind === "override" ? "When this project rule is selected, the chosen global rule will be excluded from instructions." : "Mark instructions that should not be used together. ConPin will ask you to resolve an active conflict before insertion."}</p><label>Rule<select name="target">${candidates.map(r=>`<option value="${esc(r.key)}">${esc(r.title)} · ${r.scope==="personal"?"Global":"Project"}</option>`).join("")}</select></label>`,revision=>request("setRelationship",{revision,kind,from:from.key,to:value("target"),enabled:true}),"Confirm relationship");
     }
     function preview() {
       const state=getState();

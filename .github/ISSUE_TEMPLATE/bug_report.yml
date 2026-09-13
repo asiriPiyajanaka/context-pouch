@@ -1,0 +1,17 @@
+name: Bug report
+description: Report a reproducible ConPin problem. Do not include private documents or credentials.
+body:
+  - type: textarea
+    id: versions
+    attributes:
+      label: Versions and environment
+      description: ConPin, Codex extension, VS Code, operating system, and whether this is a local window.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps, expected result, and actual result
+      description: Include a minimal reproduction and redacted errors. Security vulnerabilities belong in a private report.
+    validations:
+      required: true

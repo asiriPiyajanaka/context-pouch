@@ -45,7 +45,7 @@ class GenerationUI {
     const provider = await vscode.window.showQuickPick(providers, { title: "Generate rules · 2/3", placeHolder: "Choose how to generate rules", ignoreFocusOut: true });
     if (!provider) return;
     let key, model;
-    const config = vscode.workspace.getConfiguration("contextPouch");
+    const config = vscode.workspace.getConfiguration("conpin");
     if (provider.id === "openai") {
       if (!keyReady && !await this.setKey()) return;
       key = await this.context.secrets.get(KEY);
@@ -111,7 +111,7 @@ class GenerationUI {
         if (current.project !== initial.project || current.revision !== initial.revision) throw new Error("The project or library changed during review. Generate again against the latest rules.");
         const state = await this.library.dispatch("saveGenerated", { scope: "project", project: initial.project, revision: initial.revision, rules: selected });
         const count = state.rules.filter(r => r.scope === "project").length - existing.length;
-        vscode.window.showInformationMessage(`Saved ${count} project rules. They are available in Pouch and the rule graph.`);
+        vscode.window.showInformationMessage(`Saved ${count} project rules. They are available in ConPin and the rule graph.`);
         return;
       }
     }

@@ -1,6 +1,6 @@
 # Architecture guidelines
 
-Context Pouch consists of a VS Code extension host, a shared library/model, and browser-based composer and graph views.
+ConPin consists of a VS Code extension host, a shared library/model, and browser-based composer and graph views.
 
 ## Modular code
 

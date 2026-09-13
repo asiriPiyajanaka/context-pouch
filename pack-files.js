@@ -15,7 +15,7 @@ async function read(vscode, uri, fallback = M.empty) {
 async function importPack(library, vscode, scopeId, shared = false) {
   const initial = await library.dispatch("state");
   const scope = library.scope(scopeId);
-  const files = shared ? [scope.uri] : await vscode.window.showOpenDialog({canSelectMany:false, filters:{"Pouch rule pack":["json"]}, title:"Import rules into SQLite"});
+  const files = shared ? [scope.uri] : await vscode.window.showOpenDialog({canSelectMany:false, filters:{"ConPin rule pack":["json"]}, title:"Import rules into SQLite"});
   if (!files?.length) return;
   const incoming = await read(vscode, files[0], () => { throw new Error("Import file was not found."); });
   const preview = M.mergePack(library.packs[scopeId], incoming);
@@ -32,7 +32,7 @@ async function exportPack(library, vscode, scopeId, selectedOnly, shared = false
   if (selectedOnly) pack = M.subset(pack, state.rules.filter(r=>r.scope === scopeId && state.selected.includes(r.key)).map(r=>r.id));
   const scope = library.scopes.find(s=>s.id === scopeId);
   const file = shared ? library.scope("project").uri : (await vscode.window.showSaveDialog({
-    defaultUri:vscode.Uri.file("context-pouch-pack.json"), filters:{"Pouch rule pack":["json"]}, title:`Export ${scope.name} rules`,
+    defaultUri:vscode.Uri.file("conpin-pack.json"), filters:{"ConPin rule pack":["json"]}, title:`Export ${scope.name} rules`,
   }));
   if (!file) return;
   if (shared && await vscode.window.showWarningMessage(`Export ${scope.name} rules to .context-pouch/rules.json?`, {modal:true, detail:"This replaces that shared file with the current project rules and presets. Local defaults and global overrides are not exported."}, "Export") !== "Export") return;

@@ -1,4 +1,4 @@
-// Embedded in the Codex host bundle. Only Pouch messages are routed to Pouch.
+// Embedded in the Codex host bundle. Only ConPin messages are routed to ConPin.
 function __contextPouchWrapVscode(vscode) {
   const cache =
     __contextPouchWrapVscode.cache ||
@@ -17,7 +17,7 @@ function __contextPouchWrapVscode(vscode) {
         return;
       try {
         const result = await vscode.commands.executeCommand(
-          "contextPouch.bridge",
+          "conpin.bridge",
           message,
           webview,
         );
@@ -37,7 +37,7 @@ function __contextPouchWrapVscode(vscode) {
     owner.onDidDispose(() => {
       listener.dispose();
       vscode.commands
-        .executeCommand("contextPouch.disconnect", webview)
+        .executeCommand("conpin.disconnect", webview)
         .then(undefined, () => {});
     });
   }

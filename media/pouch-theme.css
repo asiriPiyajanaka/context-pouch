@@ -1,4 +1,4 @@
-/* Pouch branding is intentionally independent of the surrounding editor theme. */
+/* ConPin branding is intentionally independent of the surrounding editor theme. */
 #context-pouch-panel,#context-pouch-button,#context-pouch-connector,body.pouch-library {
   color-scheme:dark;
   --pouch-black:#0b0a08;

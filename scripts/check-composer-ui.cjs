@@ -25,7 +25,7 @@ await page.addStyleTag({content:fs.readFileSync(root+'/media/pouch-theme.css','u
 await page.evaluate(logo => { window.__contextPouchLogo = logo; }, 'data:image/png;base64,'+fs.readFileSync(root+'/media/logo.png').toString('base64'));
 await page.addScriptTag({path:root+'/runtime.js'});
 await page.emulateMedia({reducedMotion:'reduce'});
-await page.getByRole('button',{name:'Open Context Pouch',exact:true}).click();
+await page.getByRole('button',{name:'Open ConPin',exact:true}).click();
 await page.locator('.cp-row').first().waitFor();
 assert.equal(await page.locator('.cp-row').count(),10);
 await page.locator('.cp-row input').first().check();
@@ -55,7 +55,7 @@ await page.getByRole('button',{name:'Done adding',exact:true}).click();
 await page.getByRole('button',{name:'Switch to normal mode',exact:true}).click();
 await page.locator('[data-action=inject]').click();
 assert.match(await page.locator('.ProseMirror').innerText(),/Use the existing shared component/);
-await page.getByRole('button',{name:'Open Context Pouch',exact:true}).click();
+await page.getByRole('button',{name:'Open ConPin',exact:true}).click();
 await page.getByRole('button',{name:'Switch to advanced mode',exact:true}).click();
 await page.getByRole('button',{name:'Manage',exact:true}).click();
 await page.locator('[data-action=task-expand]').first().click();

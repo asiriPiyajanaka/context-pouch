@@ -116,7 +116,7 @@ test("host bridge wires panel and sidebar messages and preserves provider this",
   await listeners[0]({ channel: "other" });
   assert.equal(calls.length, 0);
   await listeners[0]({ channel: "context-pouch", id: "1", action: "state" });
-  assert.equal(calls[0][0], "contextPouch.bridge");
+  assert.equal(calls[0][0], "conpin.bridge");
   assert.equal(replies[0].result.ok, true);
   const original = {
     value: 42,

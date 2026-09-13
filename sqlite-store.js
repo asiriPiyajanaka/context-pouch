@@ -9,11 +9,11 @@ class SqliteStore {
     fs.mkdirSync(path.dirname(file), { recursive: true });
     let DatabaseSync;
     try { ({ DatabaseSync } = require("node:sqlite")); }
-    catch (_) { throw new Error("Pouch requires VS Code 1.101 or newer with built-in SQLite. Update VS Code and reload."); }
+    catch (_) { throw new Error("ConPin requires VS Code 1.101 or newer with built-in SQLite. Update VS Code and reload."); }
     this.db = new DatabaseSync(file);
     if (this.db.prepare("PRAGMA user_version").get().user_version > 1) {
       this.db.close();
-      throw new Error("This library was created by a newer Pouch version. Update Pouch before opening it.");
+      throw new Error("This library was created by a newer ConPin version. Update ConPin before opening it.");
     }
     this.db.exec(`PRAGMA busy_timeout=5000; PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON;
       CREATE TABLE IF NOT EXISTS metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL);

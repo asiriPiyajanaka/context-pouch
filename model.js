@@ -42,7 +42,7 @@
       !Array.isArray(input.presets)
     )
       throw new Error(
-        "Expected a Context Pouch pack with version: 1, rules, and presets.",
+        "Expected a ConPin pack with version: 1, rules, and presets.",
       );
     if (input.rules.length > 2000 || input.presets.length > 200)
       throw new Error("A pack supports up to 2,000 rules and 200 presets.");

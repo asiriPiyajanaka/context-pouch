@@ -20,7 +20,7 @@ function strip(src, start, end) {
   if (a < 0) return src;
   if (b < a)
     throw new Error(
-      "Incomplete Context Pouch patch; refusing to overwrite the bundle.",
+      "Incomplete ConPin patch; refusing to overwrite the bundle.",
     );
   return src.slice(0, a) + src.slice(b + end.length);
 }
@@ -86,7 +86,7 @@ function original(file) {
       (hash(live) !== meta.patched && live !== pristine)
     )
       throw new Error(
-        "Codex bundle or backup changed outside Pouch. Refusing to overwrite it.",
+        "Codex bundle or backup changed outside ConPin. Refusing to overwrite it.",
       );
   } else if (
     live !== pristine &&
@@ -188,4 +188,5 @@ module.exports = {
   restoreTarget,
   runtimeSource,
   stripExistingPatch,
+  original,
 };

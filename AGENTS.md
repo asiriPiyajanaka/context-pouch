@@ -1,6 +1,6 @@
-# Context Pouch project instructions
+# ConPin project instructions
 
-Read `CONTRIBUTING.md` for code-size, immutability, and validation requirements. Read `docs/architecture.md` for module and provider boundaries. These documents also serve as input for testing Pouch's project-rule generator.
+Read `CONTRIBUTING.md` for code-size, immutability, and validation requirements. Read `docs/architecture.md` for module and provider boundaries. These documents also serve as input for testing ConPin's project-rule generator.
 
 ## Working rules
 
@@ -10,4 +10,4 @@ Implement focused modules with clear responsibilities. Keep the shared prompt mo
 
 Preserve unrelated user changes. Do not modify existing project rules merely to make a generator test pass.
 
-Nested `AGENTS.md` instructions apply only to their own directories and descendants. Preserve that scope when converting documentation into Pouch rules.
+Nested `AGENTS.md` instructions apply only to their own directories and descendants. Preserve that scope when converting documentation into ConPin rules.

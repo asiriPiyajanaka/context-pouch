@@ -99,7 +99,7 @@ async function codex(prompt, { executable, signal, spawnImpl = spawn }) {
     await fs.writeFile(schemaFile, JSON.stringify(schema));
     await new Promise((resolve, reject) => {
       const child = spawnImpl(executable, ["exec", "--ignore-user-config", "--ignore-rules", "--ephemeral", "--skip-git-repo-check", "--sandbox", "read-only", "-c", "approval_policy=\"never\"", "-c", "features.shell_tool=false", "-c", "web_search=\"disabled\"", "--output-schema", schemaFile, "--output-last-message", resultFile, "-"], { cwd: dir, shell: false, signal, stdio: ["pipe", "ignore", "ignore"] });
-      child.once("error", e => reject(e.code === "ENOENT" ? new Error("Codex CLI was not found. Install it, run codex login, or set Context Pouch’s Codex Path.") : e));
+      child.once("error", e => reject(e.code === "ENOENT" ? new Error("Codex CLI was not found. Install it, run codex login, or set ConPin’s Codex Path.") : e));
       child.once("close", code => code === 0 ? resolve() : reject(new Error("Codex generation failed. Check codex login and update the CLI; this feature requires --ignore-user-config support.")));
       child.stdin.on("error", () => {});
       child.stdin.end(prompt);

@@ -13,7 +13,7 @@ const root=path.resolve(__dirname,'..');
   await page.evaluate(()=>{
    const M=window.ContextPouchModel;
    const rules=Array.from({length:18},(_,i)=>({id:String(i),key:M.key(i<14?'project':'personal',String(i)),scope:i<14?'project':'personal',title:['Reuse existing shared components','Keep modules focused','Prefer immutable bindings'][i%3]+` ${i+1}`,text:'Use existing components and follow the project conventions. Keep changes focused on the task.',category:i%2?'Architecture':'Code',related:[],isDefault:i===0}));
-   const state={revision:1,project:'demo',projects:[{id:'demo',name:'Context Pouch'}],scopes:[{id:'project',name:'Context Pouch',writable:true},{id:'personal',name:'Global',writable:true}],rules,selected:[rules[0].key],wanted:[rules[0].key],overrides:[],conflicts:[],activeConflicts:[],presets:[{id:'preset',key:M.key('project','preset'),title:'Small bug fix',scope:'project',ruleIds:['0','1']}],instructions:'Instructions for the task'};
+   const state={revision:1,project:'demo',projects:[{id:'demo',name:'ConPin'}],scopes:[{id:'project',name:'ConPin',writable:true},{id:'personal',name:'Global',writable:true}],rules,selected:[rules[0].key],wanted:[rules[0].key],overrides:[],conflicts:[],activeConflicts:[],presets:[{id:'preset',key:M.key('project','preset'),title:'Small bug fix',scope:'project',ruleIds:['0','1']}],instructions:'Instructions for the task'};
    window.acquireVsCodeApi=()=>({getState:()=>({}),setState:()=>{}});
    window.createPouchClient=(api,onState)=>async(action,data)=>{
     if(action==='libraryFocus')return null;
