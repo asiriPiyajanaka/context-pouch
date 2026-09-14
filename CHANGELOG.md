@@ -1,6 +1,10 @@
 # Changelog
 
-## 0.4.0 — Unreleased
+## 0.4.1 — Unreleased
+
+- Fix the composer connection failing with a circular JSON error when Codex requests library state before ConPin has activated. Activate ConPin explicitly and keep live webview objects out of the command transport.
+
+## 0.4.0
 
 - Rename Context Pouch to **ConPin**, with package name `conpin` and `conpin.*` commands and settings.
 - Preserve rule-pack formats and patch backups; migrate the previous local SQLite library without changing its source.

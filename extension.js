@@ -292,6 +292,7 @@ function activate(context) {
         if (choice === "Install into Codex") report(() => install(context))();
       });
   }
+  return { request: handle, disconnect: webview => clients.delete(webview) };
 }
 module.exports = {
   activate,

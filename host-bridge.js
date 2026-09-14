@@ -1,5 +1,5 @@
 // Embedded in the Codex host bundle. Only ConPin messages are routed to ConPin.
-function __contextPouchWrapVscode(vscode) {
+function __contextPouchWrapVscode(vscode, extensionId) {
   const cache =
     __contextPouchWrapVscode.cache ||
     (__contextPouchWrapVscode.cache = new WeakMap());
@@ -9,6 +9,8 @@ function __contextPouchWrapVscode(vscode) {
     const webview = owner.webview;
     if (attached.has(webview)) return;
     attached.add(webview);
+    let connection;
+    let disposed = false;
     const listener = webview.onDidReceiveMessage(async (message) => {
       if (
         message?.channel !== "context-pouch" ||
@@ -16,11 +18,14 @@ function __contextPouchWrapVscode(vscode) {
       )
         return;
       try {
-        const result = await vscode.commands.executeCommand(
-          "conpin.bridge",
-          message,
-          webview,
-        );
+        const extension = vscode.extensions.getExtension(extensionId);
+        if (!extension) throw new Error("ConPin is unavailable. Enable or reinstall ConPin, then reload VS Code.");
+        const api = await extension.activate();
+        if (disposed) return;
+        if (typeof api?.request !== "function" || typeof api?.disconnect !== "function")
+          throw new Error("ConPin could not connect. Check workspace trust and disable the old Context Pouch extension, then reload VS Code.");
+        connection = api;
+        const result = await api.request(message, webview);
         await webview.postMessage({
           channel: "context-pouch",
           id: message.id,
@@ -35,10 +40,9 @@ function __contextPouchWrapVscode(vscode) {
       }
     });
     owner.onDidDispose(() => {
+      disposed = true;
       listener.dispose();
-      vscode.commands
-        .executeCommand("conpin.disconnect", webview)
-        .then(undefined, () => {});
+      connection?.disconnect(webview);
     });
   }
   const window = new Proxy(

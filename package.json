@@ -2,7 +2,7 @@
   "name": "conpin",
   "displayName": "ConPin",
   "description": "Pin reusable project instructions beside the Codex composer. Experimental, independent integration.",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "publisher": "asiri-local",
   "icon": "media/logo.png",
   "engines": {

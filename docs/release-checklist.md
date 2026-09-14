@@ -1,6 +1,6 @@
 # ConPin release checklist
 
-Target: experimental 0.4.0 release. This checklist distinguishes implemented repository work from external publishing and installed-product checks. Do not treat a passing package build as Marketplace approval.
+Target: experimental 0.4.1 release. This checklist distinguishes implemented repository work from external publishing and installed-product checks. Do not treat a passing package build as Marketplace approval.
 
 ## Repository and implementation
 
@@ -24,6 +24,8 @@ Target: experimental 0.4.0 release. This checklist distinguishes implemented rep
 - [ ] Capture and review public screenshots of ConPin; check icon/branding ownership and suitability.
 - [ ] Perform a comprehensive secret and sensitive-content review of the public Git history. A basic pattern scan is not a full audit.
 - [ ] Review the final diff and commit a reproducible release revision. Do not ship an archive built from uncommitted/untracked runtime files.
+
+0.4.1 follow-up: 96 tests, syntax checks, official packaging, and archive verification passed locally. Added coverage for activation before the first composer request and circular webview objects. Installed connection verification is still pending.
 
 ## Installed release gates
 
@@ -58,6 +60,6 @@ npm run package
 npm run package:verify
 ```
 
-The artifact is `dist/conpin-0.4.0.vsix`. Packaging sets the Marketplace pre-release flag and the manifest displays Preview. After the account and release gates are complete, upload this exact artifact through publisher management or use the official CLI's package-path publishing option with pre-release enabled.
+The artifact is `dist/conpin-0.4.1.vsix`. Packaging sets the Marketplace pre-release flag and the manifest displays Preview. After the account and release gates are complete, upload this exact artifact through publisher management or use the official CLI's package-path publishing option with pre-release enabled.
 
 Official references: [Publishing extensions](https://code.visualstudio.com/api/working-with-extensions/publishing-extension), [Extension manifest](https://code.visualstudio.com/api/references/extension-manifest), [Workspace Trust](https://code.visualstudio.com/api/extension-guides/workspace-trust).

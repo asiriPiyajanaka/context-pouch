@@ -127,7 +127,7 @@ Generation is cancellable and times out after three minutes. Cancelling or provi
 
 ## Install and test
 
-Run `npm ci` and `npm run package`, then use **Extensions → … → Install from VSIX…** with `dist/conpin-0.4.0.vsix`. Run **ConPin: Install / Repair Codex Button** and reload VS Code after updating. Automatic repair detects changes in ConPin and Codex once enabled. Installation explicitly asks permission to modify Codex. Disable `conpin.autoRepatch` to turn automatic repair off.
+Run `npm ci` and `npm run package`, then use **Extensions → … → Install from VSIX…** with `dist/conpin-0.4.1.vsix`. Run **ConPin: Install / Repair Codex Button** and reload VS Code after updating. Automatic repair detects changes in ConPin and Codex once enabled. Installation explicitly asks permission to modify Codex. Disable `conpin.autoRepatch` to turn automatic repair off.
 
 **ConPin: Restore Codex** restores the original bundles and keeps your libraries. Restore before uninstalling ConPin, then reload.
 

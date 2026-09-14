@@ -115,11 +115,13 @@ function builds(targets) {
     throw new Error(
       "Unsupported Codex bridge structure. No bundles were changed.",
     );
+  const manifest = JSON.parse(read("package.json"));
+  const extensionId = JSON.stringify(`${manifest.publisher}.${manifest.name}`);
   host.next =
     `${HOST}\n${read("host-bridge.js")}\n${HOST_END}\n` +
     host.pristine.replace(
       requires,
-      (match) => `__contextPouchWrapVscode(${match})`,
+      (match) => `__contextPouchWrapVscode(${match}, ${extensionId})`,
     );
   bridge.next =
     `${BOOT}\n${read("webview-bootstrap.js")}\n${BOOT_END}\n` +

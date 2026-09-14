@@ -98,10 +98,13 @@ test("host bridge wires panel and sidebar messages and preserves provider this",
         provider = p;
       },
     },
-    commands: {
-      async executeCommand(...args) {
-        calls.push(args);
-        return { ok: true };
+    extensions: {
+      getExtension(id) {
+        assert.equal(id, "publisher.conpin");
+        return { activate: async () => ({
+          request: async (...args) => { calls.push(args); return { ok: true }; },
+          disconnect() {},
+        }) };
       },
     },
   };
@@ -111,12 +114,13 @@ test("host bridge wires panel and sidebar messages and preserves provider this",
     sandbox,
   );
   Object.freeze(vscode.window);
-  const wrapped = sandbox.__contextPouchWrapVscode(vscode);
+  const wrapped = sandbox.__contextPouchWrapVscode(vscode, "publisher.conpin");
   wrapped.window.createWebviewPanel();
   await listeners[0]({ channel: "other" });
   assert.equal(calls.length, 0);
   await listeners[0]({ channel: "context-pouch", id: "1", action: "state" });
-  assert.equal(calls[0][0], "conpin.bridge");
+  assert.equal(calls[0][0].action, "state");
+  assert.equal(calls[0][1], owner.webview);
   assert.equal(replies[0].result.ok, true);
   const original = {
     value: 42,
