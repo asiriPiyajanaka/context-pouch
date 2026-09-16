@@ -290,7 +290,138 @@
         }
       ],
       "appliesTo": "media"
+    },
+    {
+      "id": "9a58d19a-5c87-4d9c-9d74-29a63a6eb2b1",
+      "title": "Use public-safe demo content for screenshots",
+      "category": "Release",
+      "text": "Capture public screenshots only from this open-source project or another non-sensitive demo workspace; review each image for secrets, personal paths, private repository names, and sensitive conversation text before publishing.",
+      "related": [
+        "9bf451ec-e20b-4d89-bb75-f4946c4ace54",
+        "5784f51d-9fb8-43f8-85bc-cd6b8159ede2"
+      ],
+      "sources": [
+        {
+          "path": "docs/release-checklist.md",
+          "line": 24
+        },
+        {
+          "path": "SUPPORT.md",
+          "line": 3
+        }
+      ],
+      "appliesTo": "."
+    },
+    {
+      "id": "cf51b32c-2acd-4c91-a041-5eb6c08927e0",
+      "title": "Review public assets before packaging",
+      "category": "Release",
+      "text": "Before a release, verify VSIX contents, screenshots, README rendering, icon ownership, branding suitability, and excluded private or development artifacts as separate release gates.",
+      "related": [
+        "84869704-742c-4adc-85e4-423d0421efe3",
+        "9a58d19a-5c87-4d9c-9d74-29a63a6eb2b1"
+      ],
+      "sources": [
+        {
+          "path": "docs/release-checklist.md",
+          "line": 17
+        },
+        {
+          "path": "docs/release-checklist.md",
+          "line": 49
+        }
+      ],
+      "appliesTo": "."
+    },
+    {
+      "id": "7b0e0618-a8ac-4694-9e0a-f53f8b01d58f",
+      "title": "Validate installed ConPin separately from package builds",
+      "category": "Release",
+      "text": "Treat package verification and installed-product testing as separate gates: verify activation, Codex compatibility, trust restrictions, repair, restore, and real composer behavior in installed VS Code before publishing.",
+      "related": [
+        "78b508e2-4107-47ff-b986-30153d78525d",
+        "84869704-742c-4adc-85e4-423d0421efe3"
+      ],
+      "sources": [
+        {
+          "path": "docs/release-checklist.md",
+          "line": 3
+        },
+        {
+          "path": "docs/release-checklist.md",
+          "line": 32
+        }
+      ],
+      "appliesTo": "."
+    },
+    {
+      "id": "eb09f0fd-1852-48ec-b05a-6bd70f324847",
+      "title": "Restore Codex before disabling ConPin",
+      "category": "Recovery",
+      "text": "Run ConPin: Restore Codex and reload before disabling or uninstalling ConPin; if the extension is already unavailable, use the standalone recovery flow or reinstall Codex.",
+      "related": [
+        "7b0e0618-a8ac-4694-9e0a-f53f8b01d58f"
+      ],
+      "sources": [
+        {
+          "path": "README.md",
+          "line": 132
+        },
+        {
+          "path": "SUPPORT.md",
+          "line": 11
+        }
+      ],
+      "appliesTo": "."
+    },
+    {
+      "id": "0be58431-9cad-4f2a-9687-5af03bf5f3b1",
+      "title": "Use canonical docs for generation fixtures",
+      "category": "Testing",
+      "text": "When testing project-rule generation in this repository, include AGENTS.md, CONTRIBUTING.md, docs/architecture.md, and media/AGENTS.md so coverage includes root rules, contribution rules, architecture boundaries, and folder-scoped webview rules.",
+      "related": [
+        "65a14216-953d-4da9-8b07-67b0b4cf08d3",
+        "49acd0db-1f26-43ad-ae00-de8669d86e69"
+      ],
+      "sources": [
+        {
+          "path": "README.md",
+          "line": 134
+        }
+      ],
+      "appliesTo": "."
     }
   ],
-  "presets": []
+  "presets": [
+    {
+      "id": "release-screenshot-review",
+      "title": "Release screenshot review",
+      "ruleIds": [
+        "9a58d19a-5c87-4d9c-9d74-29a63a6eb2b1",
+        "cf51b32c-2acd-4c91-a041-5eb6c08927e0",
+        "9bf451ec-e20b-4d89-bb75-f4946c4ace54"
+      ]
+    },
+    {
+      "id": "installed-release-smoke",
+      "title": "Installed release smoke test",
+      "ruleIds": [
+        "7b0e0618-a8ac-4694-9e0a-f53f8b01d58f",
+        "eb09f0fd-1852-48ec-b05a-6bd70f324847",
+        "78b508e2-4107-47ff-b986-30153d78525d",
+        "84869704-742c-4adc-85e4-423d0421efe3"
+      ]
+    },
+    {
+      "id": "project-rule-generation-fixture",
+      "title": "Project rule generation fixture",
+      "ruleIds": [
+        "0be58431-9cad-4f2a-9687-5af03bf5f3b1",
+        "e18cc733-3edb-4dc9-bf88-702e52fda1e7",
+        "4b14bc31-94b5-4391-9c89-27bf7bdb102f",
+        "49acd0db-1f26-43ad-ae00-de8669d86e69",
+        "3744fb2c-6c4e-4af3-904e-3629176c8648"
+      ]
+    }
+  ]
 }

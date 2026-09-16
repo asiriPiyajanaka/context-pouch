@@ -129,8 +129,9 @@ function activate(context) {
       context.extensionUri,
       "media/logo.png",
     );
-    panel.webview.html = graphHtml(panel.webview, context.extensionUri);
-    panel.webview.onDidReceiveMessage(
+    const webview = panel.webview;
+    webview.html = graphHtml(webview, context.extensionUri);
+    webview.onDidReceiveMessage(
       async (message) => {
         if (
           message?.channel !== "context-pouch" ||
@@ -138,14 +139,14 @@ function activate(context) {
         )
           return;
         try {
-          const result = await handle(message, panel.webview);
-          await panel.webview.postMessage({
+          const result = await handle(message, webview);
+          await webview.postMessage({
             channel: "context-pouch",
             id: message.id,
             result,
           });
         } catch (e) {
-          await panel.webview.postMessage({
+          await webview.postMessage({
             channel: "context-pouch",
             id: message.id,
             error: e.message,
@@ -156,8 +157,8 @@ function activate(context) {
       context.subscriptions,
     );
     panel.onDidDispose(() => {
-      clients.delete(panel.webview);
-      graph = undefined;
+      clients.delete(webview);
+      if (graph === panel) graph = undefined;
     });
   }
   async function handle(message, webview) {
