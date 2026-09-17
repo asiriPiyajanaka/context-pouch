@@ -113,7 +113,7 @@
   panel.setAttribute("aria-modal", "false");
   button.setAttribute("aria-controls", panel.id);
   button.setAttribute("aria-expanded", "false");
-  panel.innerHTML = `<div class="cp-head"><div class="cp-title"><strong>ConPin</strong><span class="cp-count"></span></div><button data-action="graph" title="Open rule library in a new tab" aria-label="Open rule library">Library ↗<svg class="cp-library-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h4v16H4ZM11 4h4v16h-4ZM18 5l3 14"/></svg></button><button class="cp-header-icon" data-action="toggle-mode" title="Switch to advanced mode" aria-label="Switch to advanced mode"><svg viewBox="0 0 24 24" aria-hidden="true"></svg></button><button class="cp-header-icon" data-action="close" title="Close ConPin" aria-label="Close ConPin"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 4 16 16M20 4 4 20"/></svg></button></div><div class="cp-error" role="status"></div><div class="cp-main"><div class="cp-tools"><div class="cp-simple-toolbar cp-simple-only">${simpleTool("project", "Choose project", '<path d="M3 6h6l2 2h10v12H3Z"/>')}${simpleTool("search", "Search rules", '<circle cx="10" cy="10" r="6"/><path d="m15 15 6 6"/>')}${simpleTool("filters", "Filter rules", '<path d="M3 6h18M6 12h12M9 18h6"/>')}${simpleTool("preset", "Choose preset", '<path d="M6 3h12v18l-6-4-6 4Z"/>')}</div><select class="cp-project" aria-label="Active project"></select><div class="cp-chooser"><input class="cp-search" aria-label="Search rules" placeholder="Find a rule or preset…"><select class="cp-preset" aria-label="Task preset"><option value="">Preset…</option></select></div><div class="cp-advanced cp-filters"><select class="cp-scope" aria-label="Filter by library"><option value="all">All libraries</option></select><select class="cp-category" aria-label="Filter by category"><option value="all">All categories</option></select></div><div class="cp-advanced"><button data-action="preset">Save preset</button></div></div><div class="cp-list"></div><div class="cp-footer"><button class="cp-primary cp-simple-only" data-action="inject" title="Insert selected rules into your draft">Select rules to insert</button><button class="cp-action-icon" data-action="generate" title="Generate rules from project" aria-label="Generate rules from project"><span aria-hidden="true">✦</span><span class="cp-action-label">Generate rules from project</span></button><button class="cp-primary" data-action="preview"><span aria-hidden="true">✓ </span>Review selected rules</button><button class="cp-advanced" data-action="reinforce">Reinforce selected</button><div class="cp-wide cp-meta cp-advanced"><button data-action="add">+ Rule</button><button data-action="clear">Clear selection</button><button data-action="save-defaults">Save defaults</button><button data-action="restore-defaults">Restore defaults</button></div></div></div><div class="cp-dialog"></div>`;
+  panel.innerHTML = `<div class="cp-head"><div class="cp-title"><strong>ConPin</strong><span class="cp-count"></span></div><button data-action="graph" title="Open rule library in a new tab" aria-label="Open rule library">Library ↗<svg class="cp-library-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h4v16H4ZM11 4h4v16h-4ZM18 5l3 14"/></svg></button><button class="cp-header-icon" data-action="toggle-mode" title="Switch to advanced mode" aria-label="Switch to advanced mode" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"></svg></button><button class="cp-header-icon" data-action="close" title="Close ConPin" aria-label="Close ConPin"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 4 16 16M20 4 4 20"/></svg></button></div><div class="cp-error" role="status"></div><div class="cp-main"><div class="cp-tools"><div class="cp-simple-toolbar cp-simple-only">${simpleTool("project", "Choose project", '<path d="M3 6h6l2 2h10v12H3Z"/>')}${simpleTool("search", "Search rules", '<circle cx="10" cy="10" r="6"/><path d="m15 15 6 6"/>')}${simpleTool("filters", "Filter rules", '<path d="M3 6h18M6 12h12M9 18h6"/>')}${simpleTool("preset", "Choose preset", '<path d="M6 3h12v18l-6-4-6 4Z"/>')}</div><select class="cp-project" aria-label="Active project"></select><div class="cp-chooser"><input class="cp-search" aria-label="Search rules" placeholder="Find a rule or preset…"><select class="cp-preset" aria-label="Task preset"><option value="">Preset…</option></select></div><div class="cp-advanced cp-filters"><select class="cp-scope" aria-label="Filter by library"><option value="all">All libraries</option></select><select class="cp-category" aria-label="Filter by category"><option value="all">All categories</option></select></div><div class="cp-advanced"><button data-action="preset">Save preset</button></div></div><div class="cp-list"></div><div class="cp-footer"><button class="cp-primary cp-simple-only" data-action="inject" title="Insert selected rules into your draft">Select rules to insert</button><button class="cp-action-icon" data-action="generate" title="Generate rules from project" aria-label="Generate rules from project"><span aria-hidden="true">✦</span><span class="cp-action-label">Generate rules from project</span></button><button class="cp-primary" data-action="preview"><span aria-hidden="true">✓ </span>Review selected rules</button><button class="cp-advanced" data-action="reinforce">Reinforce selected</button><div class="cp-wide cp-meta cp-advanced"><button data-action="add">+ Rule</button><button data-action="clear">Clear selection</button><button data-action="save-defaults">Save defaults</button><button data-action="restore-defaults">Restore defaults</button></div></div></div><div class="cp-dialog"></div>`;
   const taskDraft = window.PouchTaskDraft.create();
   const taskUI = window.createPouchTaskUI({ panel, esc, getState: () => state, render, request, dialog, closeDialog, edit, preview, error: message => error(message), draft: taskDraft });
   const advancedUI = window.createPouchAdvancedUI({ panel, esc, getState: () => state, render, position });
@@ -135,6 +135,7 @@
     const modeLabel = advanced ? "Switch to normal mode" : "Switch to advanced mode";
     modeButton.title = modeLabel;
     modeButton.setAttribute("aria-label", modeLabel);
+    modeButton.setAttribute("aria-pressed", String(advanced));
     modeButton.querySelector("svg").innerHTML = advanced
       ? '<path d="M8 5h13M8 12h13M8 19h13M3 5h.01M3 12h.01M3 19h.01"/>'
       : '<path d="M3 6h4m4 0h10M3 12h10m4 0h4M3 18h4m4 0h10"/><circle cx="9" cy="6" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="9" cy="18" r="2"/>';
@@ -419,7 +420,9 @@
       const count = state.selected.length;
       panel.querySelector('[data-action="inject"]').textContent = count ? `Insert ${count} rule${count === 1 ? "" : "s"} into draft` : "Select rules to insert";
       const rules = [...projectRules, ...globalRules];
-      listElement.innerHTML = rules.slice(0, simpleLimit).map(row).join("") || '<div class="cp-empty">No matching rules.</div>';
+      listElement.innerHTML = rules.slice(0, simpleLimit).map(row).join("") || (state.rules.length
+        ? '<div class="cp-empty">No matching rules.</div>'
+        : '<div class="cp-empty cp-empty-library"><strong>No rules yet</strong><p>Import a rule pack, add a rule, or generate suggestions from this project.</p><div class="cp-empty-actions"><button data-action="import">Import rules</button><button data-action="add">Add rule</button><button data-action="generate">Generate rules</button></div></div>');
       if (rules.length > simpleLimit) listElement.innerHTML += `<button class="cp-more" data-action="more-rules">Show more (${rules.length - simpleLimit} remaining)</button>`;
       for (const [name, active] of Object.entries({ search: Boolean(search), filters: filter !== "all" || scope.value !== "all" }))
         panel.querySelector(`[data-action="tool-${name}"]`).dataset.active = String(active);
@@ -436,8 +439,9 @@
     for (const a of ["preview", "preset", "inject"])
       panel.querySelector(`[data-action="${a}"]`).disabled =
         !state.selected.length;
-    panel.querySelector('[data-action="generate"]').disabled =
-      !state.scopes.some(s => s.id === "project" && s.writable);
+    panel.querySelectorAll('[data-action="generate"]').forEach(button => {
+      button.disabled = !state.scopes.some(s => s.id === "project" && s.writable);
+    });
     advancedUI.update(shown, filter !== "all" || scope.value !== "all");
     if (advanced) taskUI.updateCount();
     else if (taskDraft.editedCount(state)) panel.querySelector(".cp-count").textContent += ` · ${taskDraft.editedCount(state)} edited for draft`;
@@ -481,6 +485,14 @@
         .join(
           "",
         )}</select></label><label><span>Title</span><input name="title" maxlength="100" value="${esc(rule?.title || "")}"></label><label><span>Category</span><input name="category" maxlength="50" value="${esc(rule?.category || "Other")}"></label><label><span>Rule text</span><textarea name="text" maxlength="5000">${esc(rule?.text || "")}</textarea></label><div class="cp-actions"><button class="cp-primary" data-action="save">Save rule</button><button data-action="cancel">Cancel</button>${rule ? '<button data-action="delete">Delete rule</button>' : ""}</div>`,
+    );
+  }
+  function importRules() {
+    dialog(
+      `<button data-action="cancel">Back</button><strong>Import rules</strong><label><span>Library</span><select name="import-scope">${state.scopes
+        .filter((scope) => scope.writable)
+        .map((scope) => `<option value="${esc(scope.id)}">${esc(scope.id === "personal" ? "Global" : scope.name)}</option>`)
+        .join("")}</select></label><p>You will choose a rule-pack file and review duplicates before anything is imported.</p><div class="cp-actions"><button class="cp-primary" data-action="confirm-import">Choose file…</button><button data-action="cancel">Cancel</button></div>`,
     );
   }
   function insertInstructions(text) {
@@ -571,6 +583,13 @@
       else if (action === "cancel") closeDialog();
       else if (action === "graph") await request("graph");
       else if (!state || busy) return;
+      else if (!advanced && !state.rules.length && ["add", "generate", "import"].includes(action)) {
+        setMode(true);
+        taskUI.show("manage");
+        if (action === "add") edit();
+        else if (action === "import") importRules();
+        else { dismiss(); await request("generate"); }
+      }
       else if (action === "reset-filters") {
         advancedUI.reset(); filter = "all"; search = "";
         panel.querySelector(".cp-scope").value = "all";
@@ -586,6 +605,11 @@
         if (state.selected.length) insertInstructions(M.payload(picked(), "inject"));
       }
       else if (action === "generate") { dismiss(); await request("generate"); }
+      else if (action === "import") importRules();
+      else if (action === "confirm-import") {
+        await request("import", { scope: panel.querySelector('[name="import-scope"]').value });
+        closeDialog();
+      }
       else if (action === "save-defaults") {
         dialog('<strong>Save selection as project defaults</strong><p>This remembers the current saved rule selection for this project. Draft-only wording is not saved. Unselected global defaults will be disabled for this project.</p><div class="cp-actions"><button class="cp-primary" data-action="confirm-defaults">Save project defaults</button><button data-action="cancel">Cancel</button></div>');
       } else if (action === "confirm-defaults") { await request("saveDefaults"); closeDialog(); }

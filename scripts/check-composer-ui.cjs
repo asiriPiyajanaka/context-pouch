@@ -31,6 +31,7 @@ assert.equal(await page.locator('.cp-row').count(),10);
 await page.locator('.cp-row input').first().check();
 assert.equal(await page.locator('[data-action=inject]').innerText(),'Insert 1 rule into draft');
 await page.getByRole('button',{name:'Switch to advanced mode',exact:true}).click();
+assert.equal(await page.getByRole('button',{name:'Switch to normal mode',exact:true}).getAttribute('aria-pressed'),'true');
 assert(await page.getByRole('button',{name:'Compose',exact:true}).isVisible());
 const brand = await page.locator('#context-pouch-button').evaluate(el => {
   const style = getComputedStyle(el);
@@ -79,6 +80,22 @@ await page.getByRole('button',{name:'Restore saved wording',exact:true}).click()
 await page.getByRole('button',{name:'Inspect',exact:true}).click();
 assert.match(await page.locator('.cp-exact-preview').innerText(),/Instruction 1/);
 assert.doesNotMatch(await page.locator('.cp-exact-preview').innerText(),/Use the existing/);
+await page.getByRole('button',{name:'Switch to normal mode',exact:true}).click();
+await page.evaluate(()=>{testState.rules=[];testState.selected=[];testState.wanted=[];testState.revision++;});
+await page.getByRole('button',{name:'Open ConPin',exact:true}).click();
+await page.getByRole('button',{name:'Open ConPin',exact:true}).click();
+assert(await page.getByRole('button',{name:'Import rules',exact:true}).isVisible());
+assert(await page.getByRole('button',{name:'Add rule',exact:true}).isVisible());
+assert(await page.getByRole('button',{name:'Generate rules',exact:true}).isVisible());
+await page.getByRole('button',{name:'Add rule',exact:true}).click();
+assert.equal(await page.getByRole('button',{name:'Switch to normal mode',exact:true}).getAttribute('aria-pressed'),'true');
+assert(await page.getByText('New rule',{exact:true}).isVisible());
+await page.getByRole('button',{name:'Cancel',exact:true}).click();
+await page.getByRole('button',{name:'Switch to normal mode',exact:true}).click();
+await page.getByRole('button',{name:'Import rules',exact:true}).click();
+assert.equal(await page.getByRole('button',{name:'Switch to normal mode',exact:true}).getAttribute('aria-pressed'),'true');
+assert(await page.locator('.cp-dialog strong').getByText('Import rules',{exact:true}).isVisible());
+await page.getByRole('button',{name:'Cancel',exact:true}).last().click();
 assert.deepEqual(errors,[]);
 console.log('PASS: task compose, temporary edits, exact preview, saved-rule separation, normal-mode insertion, conflict resolution and narrow layout');
 } finally {await browser.close();}

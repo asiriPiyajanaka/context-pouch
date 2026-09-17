@@ -3,6 +3,7 @@
 #context-pouch-panel.advanced .cp-head{padding:8px 12px 5px}
 #context-pouch-panel.advanced .cp-head [data-action=graph]{width:30px;height:30px;padding:5px;font-size:0}
 #context-pouch-panel.advanced .cp-library-icon{display:block;margin:auto}
+#context-pouch-panel .cp-header-icon[aria-pressed=true]{background:#b89a5b24;border-color:var(--vscode-focusBorder,#d4b777)}
 .cp-mode-badge{font-size:10px;font-weight:400;opacity:.65;margin-left:5px}
 #context-pouch-panel.advanced .cp-count{white-space:normal}
 #context-pouch-panel.advanced .cp-tools{padding:0 12px 6px;border:0;max-height:45%;overflow-y:auto;flex-shrink:0;min-height:42px}
@@ -56,3 +57,7 @@
 #context-pouch-panel.advanced .cp-task-rule .cp-rule-details{padding:0 12px 12px}
 #context-pouch-panel.advanced .cp-list h3{font-size:12px;margin:12px 8px}
 #context-pouch-panel.advanced[data-task-view=inspect] .cp-tools{display:none}
+.cp-empty-library{opacity:1}
+.cp-empty-library>strong{display:block;font-size:13px}
+.cp-empty-library p{margin:6px auto 12px;max-width:280px;opacity:.72}
+.cp-empty-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:7px}
