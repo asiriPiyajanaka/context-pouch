@@ -21,11 +21,11 @@ Target: experimental 0.4.1 release. This checklist distinguishes implemented rep
 ## Local validation
 
 - [x] Local validation: syntax checks, 92 unit tests, both browser regression scripts, official pre-release packaging, and VSIX-content verification passed on macOS / Node 24.15.0. Cross-platform CI and installed VS Code checks are still pending.
-- [ ] Capture and review public screenshots of ConPin; check icon/branding ownership and suitability.
-- [ ] Perform a comprehensive secret and sensitive-content review of the public Git history. A basic pattern scan is not a full audit.
-- [ ] Review the final diff and commit a reproducible release revision. Do not ship an archive built from uncommitted/untracked runtime files.
+- [x] Capture and review public screenshots of ConPin; check icon/branding ownership and suitability. Five public assets are included in the README. They contain C2PA metadata identifying them as AI-generated, contain no personal or credential data, and use ConPin project branding. References to VS Code and the Codex interface are contextual; retain the prominent independent/not-endorsed disclosure and complete the Marketplace suitability gate below.
+- [x] Perform a comprehensive secret and sensitive-content review of the public Git history. All reachable revisions through the release review were checked for sensitive filenames, private-key material, common provider token formats, credential assignments, connection strings, and local home-directory paths; deleted historical files and screenshot metadata were also inspected. No credentials were found. Git author metadata includes the contributor's Gmail address, which must be intentional before making the repository public.
+- [x] Review the final diff and commit a reproducible release revision. Do not ship an archive built from uncommitted/untracked runtime files. The release documentation and public assets were committed together; rebuild and verify the final VSIX from the clean release commit.
 
-0.4.1 follow-up: 96 tests, syntax checks, official packaging, and archive verification passed locally. Added coverage for activation before the first composer request and circular webview objects. Installed connection verification is still pending.
+0.4.1 follow-up: 97 tests, syntax checks, official packaging, and archive verification passed locally. Added coverage for activation before the first composer request and circular webview objects. Installed connection verification is still pending.
 
 ## Installed release gates
 

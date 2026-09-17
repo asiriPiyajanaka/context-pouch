@@ -16,6 +16,28 @@ ConPin is currently prepared for an experimental release; a public Marketplace l
 
 [Privacy](PRIVACY.md) · [Support](SUPPORT.md) · [Changelog](CHANGELOG.md) · [Contributing](CONTRIBUTING.md) · [Release checklist](docs/release-checklist.md)
 
+## Screenshots
+
+Select reusable rules without rewriting them for every task.
+
+![ConPin rule selection beside the composer](docs/assets/screenshots/scrns1.png)
+
+Move between focused compose, inspect, and manage workflows.
+
+![ConPin advanced compose view](docs/assets/screenshots/scrns2.png)
+
+Keep ConPin close to the Codex composer.
+
+![ConPin beside the Codex composer](docs/assets/screenshots/scrns3.png)
+
+Inspect rule relationships in the visual graph.
+
+![ConPin rule relationship graph](docs/assets/screenshots/scrns4.png)
+
+Build and review a project-aware rule library.
+
+![ConPin rule library](docs/assets/screenshots/scrns5.png)
+
 ## Use the library
 
 The Library keeps Rules, Presets, and Graph in separate views. Rules provides search, category and selected-only filters; checkboxes select instructions while titles open their details. Defaults, sources, and relationships expand when needed. In a narrow pane, Back to rules returns to the list with keyboard focus restored. The bottom bar keeps selection review available. Tools contains project defaults and import/export actions; presets and saving project defaults explain their effects before applying.
