@@ -29,14 +29,24 @@ Target: experimental 0.4.1 release. This checklist distinguishes implemented rep
 
 ## Installed release gates
 
-- [ ] Verify activation and built-in SQLite on VS Code 1.101.0 and current stable; adjust `engines.vscode` if the claimed minimum fails.
-- [ ] Verify current installed Codex compatibility and record exact tested versions. The README's development bundle coverage is not a live support matrix.
-- [ ] On each supported OS: clean install, explicit consent/cancel, reload, repair after upgrade, restore, disable, uninstall, reinstall, and standalone recovery.
-- [ ] Confirm Restricted Mode, virtual workspaces, and remote windows cannot activate the integration.
-- [ ] Test migration from the old extension with a real profile; confirm API key re-entry and unchanged original storage.
-- [ ] Verify draft text/attachments, correction target and timing, cancellation, navigation, and recovery after delivery failure in real Codex.
-- [ ] Verify Codex CLI and OpenAI generation with non-sensitive sample documents and the account owner's credentials.
-- [ ] Complete keyboard, screen-reader, focus, narrow-pane, theme, and reduced-motion review in VS Code.
+Evidence captured on 2026-09-17 from macOS 26.4.1 arm64:
+
+- [x] Verify activation and built-in SQLite on the installed VS Code. VS Code 1.136.1 activated ConPin 0.4.1 through Codex, the ConPin database passed `PRAGMA integrity_check`, and the host reported SQLite 3.50.6.
+- [x] Install the exact reviewed release artifact in the test profile. `dist/conpin-0.4.1.vsix` was force-installed and its changed runtime/UI files match the release sources byte-for-byte. Artifact SHA-256: `59a27184c7d5596702c8ce8ddcc2d85e7ae5249409e61dd322b100a25f25a45c`.
+- [ ] Manually reload VS Code, run **ConPin: Install / Repair Codex Button**, then confirm **ConPin: Show Status** reports up to date and both the composer control and Library open. This is required because the exact artifact was installed while the current IDE session was running.
+- [ ] Update to current stable VS Code 1.138, then repeat activation, built-in SQLite, composer, and Library checks. The installed 1.136.1 is two minor releases behind current stable.
+- [ ] Verify activation and built-in SQLite on the claimed minimum VS Code 1.101.0 in an isolated profile; adjust `engines.vscode` if it fails.
+- [x] Record the current local compatibility candidates: VS Code 1.136.1, Codex extension 26.908.40401, ConPin 0.4.1, Codex CLI 0.150.1, macOS 26.4.1 arm64. The official Codex extension supports this VS Code host, but ConPin compatibility still requires the live checks below.
+- [x] Validate installed patch structure and standalone recovery preview for Codex 26.908.40401. ConPin identified the webview, host, API bridge, and session bundles, and validated four pristine backups without changing them.
+- [ ] Manually verify current installed Codex compatibility after reload: insert into a draft, open the Library, and send/cancel a reviewed correction. Record the successful Codex extension version as the tested live support version; development bundle coverage alone is not a live support matrix.
+- [ ] On macOS, manually complete the destructive/interactive lifecycle in an isolated profile: clean install, explicit consent and cancel paths, reload, repair after a simulated Codex upgrade, restore, disable, uninstall, reinstall, and standalone recovery with `--apply` while VS Code is closed. The non-writing standalone recovery preview already passed.
+- [ ] Repeat the lifecycle on Windows and Linux before claiming those operating systems as installed-product support.
+- [x] Confirm repository enforcement for Restricted Mode, virtual workspaces, and remote windows: manifest capabilities reject untrusted/virtual workspaces, the extension is declared local UI-only, and automated activation guards pass.
+- [ ] Manually smoke-test one Restricted Mode window, one virtual workspace, and one remote window; confirm ConPin refuses integration and does not modify remote Codex files.
+- [ ] Test migration from the old extension with a disposable copy of the real legacy profile; confirm API key re-entry and byte-for-byte unchanged original storage. Both legacy and ConPin stores are present locally, but the existing user profile must not be mutated for this release test.
+- [ ] In real Codex, manually verify preservation of draft text and attachments plus correction target/timing, cancel, navigation, stop-and-correct, queued correction, and recovery after delivery failure. Automated synthetic coverage passed, but it does not complete this installed gate.
+- [ ] Manually verify Codex CLI and OpenAI generation with non-sensitive sample documents and the account owner's credentials. This can incur account usage and must not use repository secrets.
+- [ ] Complete keyboard, screen-reader, focus, narrow-pane, light/dark/high-contrast theme, and reduced-motion review in VS Code. Browser regression checks cover focus and narrow layout but do not replace assistive-technology testing.
 
 ## Accounts and publishing
 
