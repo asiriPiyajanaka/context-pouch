@@ -50,14 +50,18 @@ Evidence captured on 2026-09-17 from macOS 26.4.1 arm64:
 
 ## Accounts and publishing
 
-- [ ] Confirm the permanent Marketplace publisher. `asiri-local` remains a local placeholder; registration/ownership and `conpin` availability are unverified. A publisher change also changes storage identity: finalize it before release.
-- [ ] Confirm repository visibility, ownership/license of contributed assets, and the public support URLs. Rename the GitHub repository only if desired, then update manifest/docs links.
-- [ ] Enable GitHub private vulnerability reporting and verify the route before opening the repository publicly.
-- [ ] Confirm Marketplace suitability of modifying another extension's installed bundles. Public acceptance is not established by this repository.
-- [ ] Run CI on the release commit; all required checks must pass.
-- [ ] Create a Marketplace publisher and configure publishing authentication outside source control.
-- [ ] Rebuild and verify the final VSIX under the chosen publisher. Review the README, license, changelog, and screenshots as rendered in VS Code.
-- [ ] Publish the reviewed VSIX as a pre-release and create a matching Git tag/release. Publishing is a separate action; no automated workflow here publishes.
+Evidence captured on 2026-09-19:
+
+- [x] Confirm repository visibility and public support routes. The GitHub repository is public and unarchived, uses `main` as its default branch, has an MIT license detected, and its README, issues, security, and advisory routes respond publicly. Rename the repository only if desired, then update the manifest and documentation links.
+- [x] Verify the current placeholder package mechanically. `dist/conpin-0.4.1.vsix` declares `asiri-local.conpin` as a public preview, includes the MIT license and public documentation, converts README image links to public GitHub URLs, and has SHA-256 `59a27184c7d5596702c8ce8ddcc2d85e7ae5249409e61dd322b100a25f25a45c`. It is not the final artifact while the publisher remains a placeholder.
+- [x] Manually attest ownership or distribution rights for all contributed code and public assets. The logo and five screenshots carry C2PA metadata identifying OpenAI GPT image generation; confirm that you created or are authorized to distribute them and that the contextual VS Code/Codex interface imagery is acceptable. Keep the prominent independent/not-endorsed disclosure.
+- [ ] Choose and create the permanent Marketplace publisher, then replace `asiri-local` in `package.json`. Public Marketplace search returned no listing for `asiri-local.conpin` or `conpin`, but it cannot confirm or reserve a publisher ID or extension name. Publisher IDs cannot be changed after creation, and changing it also changes ConPin's extension storage identity.
+- [ ] Enable GitHub private vulnerability reporting in **Settings > Security > Private vulnerability reporting**, then confirm that **Report a vulnerability** is available. The GitHub API currently reports this feature as disabled.
+- [ ] Resolve the Codex licensing and Marketplace-policy blocker before submission. The installed Codex extension's `LICENSE.md` incorporates OpenAI's Terms of Use, which currently prohibit modifying the Services and attempting to reverse engineer or discover their underlying components. ConPin locates private/minified Codex implementation structures and rewrites four installed bundles, so do not publish this integration without explicit written authorization from OpenAI or a redesign that uses supported public APIs without modifying Codex. Separately ask VS Marketplace support whether a fully disclosed, user-consented cross-extension patch is eligible; Microsoft cannot grant OpenAI's permission. Retain both written responses with the release evidence.
+- [ ] Fix and rerun CI until every required job is green. The [latest run for the current `main` commit](https://github.com/asiriPiyajanaka/context-pouch/actions/runs/35420491682) passed browser and all macOS/Linux Node 22/24 jobs, but `npm test` failed on both Windows jobs. Sign in to GitHub to inspect the unavailable job logs and provide the failure output for diagnosis.
+- [ ] Configure Marketplace publishing authentication outside source control. Prefer Microsoft's current secure publishing/Entra workflow; Azure DevOps personal access tokens are scheduled for global retirement on 2026-12-01.
+- [ ] After the publisher and CI are finalized, rebuild and verify the final VSIX from the clean release revision. Review the Marketplace-rendered README, license, changelog, icon, and screenshots before upload.
+- [ ] Publish the reviewed VSIX as a pre-release and create a matching Git tag/release. Publishing is a separate external action; no automated workflow here publishes.
 
 ## Reference workflow
 
